@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "kandy-kafka"
+version = "0.0.1"
+description = "Handy way to manage kafka"
+authors = ["Perchinka <alexsator.lukin@gmail.com>"]
+license = "GPL-2.0-only"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+confluent-kafka = "^2.3.0"
+urwid = "^2.6.10"
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
