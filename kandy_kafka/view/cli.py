@@ -5,10 +5,10 @@ class KafkaMonitorCLIView(AbstractView):
     def __init__(self):
         self.loop = None
 
-    def display_output(self, output):
+    def display_output(self, output: str):
         if output is None:
             output = 'Test'
-        txt = urwid.Text(output, align='center')
+        txt = urwid.Text(output)
         attr = urwid.AttrMap(txt, 'streak')
         fill = urwid.Filler(attr)
         padding = urwid.Padding(fill, left=2, right=2)
