@@ -7,11 +7,14 @@ help:
 install: ## Install dependencies
 	@poetry install
 
-start_kafka: ## Start local kafka
+start_kafka: ## Start local kafka docker
 	@docker-compose -f docker-compose.kafka.yaml up -d
 
-stop_kafka: ## Stop local kafka
+stop_kafka: ## Stop local kafka docker
 	@docker-compose -f docker-compose.kafka.yaml down
 
 test: ## Run tests
 	@poetry run pytest tests/
+
+run: ## Run the application
+	@poetry run python -m kandy
