@@ -8,7 +8,7 @@ install: ## Install dependencies
 	@poetry install
 
 start_kafka: ## Start local kafka docker
-	@docker-compose -f docker-compose.kafka.yaml up -d
+	@docker-compose -f docker-compose.kafka.yaml up -d --build
 
 stop_kafka: ## Stop local kafka docker
 	@docker-compose -f docker-compose.kafka.yaml down

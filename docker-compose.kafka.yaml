@@ -45,3 +45,13 @@ services:
       echo -e 'Successfully created the following topics:'
       kafka-topics --bootstrap-server kafka:9092 --list
       "
+
+  kafka-manager:
+    image: hlebalbau/kafka-manager
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - 9000:9000
+    environment:
+      - ZK_HOSTS=zookeeper:32181

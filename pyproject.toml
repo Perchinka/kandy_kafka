@@ -10,6 +10,7 @@ readme = "README.md"
 python = "^3.11"
 confluent-kafka = "^2.3.0"
 urwid = "^2.6.10"
+pydantic = "^2.6.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^8.1.1"
