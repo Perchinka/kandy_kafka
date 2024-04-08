@@ -1,5 +1,5 @@
 from kandy_kafka.adapters.kafka_adapter import ClusterAdapter
-
+from kandy_kafka.gui.gui import GUI
 
 def main():
     host = "localhost"
@@ -7,9 +7,11 @@ def main():
 
     cluster_adapter = ClusterAdapter(host, port)
     topics = cluster_adapter.get_topics_list()
-    brokers = cluster_adapter.get_brokers_list()
 
-    print(cluster_adapter.get_topic("snd"))
+    gui = GUI()
+    gui.update_topics(topics)
+    gui.run()
+
 
 if __name__ == "__main__":
     main()

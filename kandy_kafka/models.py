@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 
-class Broker(BaseModel): # Called Node in confluent kafka library
+class Node(BaseModel):
     id: int
     host: str
     port: int
@@ -12,9 +12,9 @@ class Broker(BaseModel): # Called Node in confluent kafka library
 
 class Partition(BaseModel):
     id: int
-    leader: Broker
-    replicas: List[Broker]
-    isr: List[Broker]
+    leader: Node
+    replicas: List[Node]
+    isr: List[Node]
 
 
 class Topic(BaseModel):
