@@ -8,8 +8,9 @@ from kandy_kafka.models import (
     Topic,
     Partition,
     Node,
+    Consumer
 )
-from typing import List
+from typing import Dict, List, Tuple
 
 class AbstractKafkaClusterAdapter(ABC):
     @abstractmethod
@@ -17,11 +18,27 @@ class AbstractKafkaClusterAdapter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_brokers_list(self):
+    def get_brokers_list(self) -> List[Node]:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_topic(self, topic_name: str) -> Topic:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_broker(self, broker_id: int) -> Node:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_consumer_groups(self) -> List[List[Consumer]]:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def poll_data(self) -> Tuple[List[Topic], List[Node], List[str]]:
         raise NotImplementedError
       
 
-class ClusterAdapter(AbstractKafkaClusterAdapter):
+class KafkaAdapter(AbstractKafkaClusterAdapter):
     def __init__(self, host: str, port: int):
         self.admin_client = AdminClient({
             "bootstrap.servers": f"{host}:{port}"
@@ -34,7 +51,7 @@ class ClusterAdapter(AbstractKafkaClusterAdapter):
             topics_list.append(self.get_topic(topic_name))
         return topics_list
     
-    def get_brokers_list(self):
+    def get_brokers_list(self) -> List[Node]:
         brokers = self.admin_client.list_topics().brokers
         brokers_list = []
         for broker_id in brokers:
@@ -65,4 +82,18 @@ class ClusterAdapter(AbstractKafkaClusterAdapter):
     def get_broker(self, broker_id: int):
         broker = self.admin_client.describe_cluster().brokers[broker_id]
         return Node(id=broker.id, host=broker.host, port=broker.port, rack=broker.rack)
+    
+
+    def get_consumer_groups(self):
+        consumer_groups = self.admin_client.list_groups()
+        return consumer_groups
         
+    
+    def poll_data(self) -> Dict:
+        topics = self.get_topics_list()
+        brokers = self.get_brokers_list()
+        consumer_groups = self.get_consumer_groups()
+
+        return {"topic": topics,
+                "broker": brokers,
+                "consumer_group": consumer_groups}
