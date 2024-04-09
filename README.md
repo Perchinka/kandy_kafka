@@ -1,4 +1,4 @@
-# kandy_kafka
+# Kandy
 
 ## Overview
 
