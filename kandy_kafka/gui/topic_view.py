@@ -1,24 +1,38 @@
 from typing import List
-import urwid
-from abc import ABC, abstractmethod
-
 from kandy_kafka.models import Topic
 
-class Panel(ABC):
-    @abstractmethod
-    def show(self):
-        raise NotImplementedError
+import urwid
+
+
+class TopicsView:
+    def __init__(self, controler):
+        self.controler = controler
+        self.elements = {
+            "topics_names": TopicsList(),
+            "topic_data": TopicDataPanel()
+            }
+        self.columns = urwid.Columns([
+            ('weight', 1, self.elements["topics_names"].show()),
+            ('weight', 1.5, self.elements["topic_data"].show())
+        ], dividechars=1)
+        
+
+    def update_topics_names(self, topics_names: List[str]):
+        self.elements["topics_names"].update(topics_names)
+        self.update()
+
+    def get_topic(self, topic_name: str):
+        return self.controler.get_topic(topic_name)
     
-    @abstractmethod
     def update(self):
-        raise NotImplementedError
+        self.columns.contents[0] = (self.elements["topics_names"].show(), self.columns.options())
 
 
-class TopicsPanel(Panel):
+class TopicsList:
     def __init__(self) -> None:
         self.topics_names = []
         self.topics_list = urwid.SimpleFocusListWalker([])
-        self.listbox = self.FocusChangeListBox(self.topics_list, self.on_topic_selected)
+        self.listbox = self.FocusChangeListBox(self.topics_list, self.select_topic)
         self.rounded_layout = urwid.LineBox(self.listbox, tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')
         self.last_focus = None
 
@@ -46,10 +60,15 @@ class TopicsPanel(Panel):
     def update(self, topics_names: List[str]):
         self.topics_names = topics_names
 
-    def on_topic_selected(self, button, user_data):
+    def get_selected_topic(self):
+        if self.last_focus is not None and self.last_focus < len(self.topics_list):
+            return self.topics_list[self.last_focus].get_text()[0]
+
+    def select_topic(self, button, user_data):
         _, self.last_focus = self.topics_list.get_focus()
 
-class TopicDataPanel(Panel):
+
+class TopicDataPanel:
     def __init__(self) -> None:
         self.topic_data = urwid.Text('')
         self.rounded_layout = urwid.LineBox(self.topic_data, tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')

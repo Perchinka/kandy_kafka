@@ -3,6 +3,9 @@ import logging
 from typing import Any
 from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
 from kandy_kafka.config import Config
+from kandy_kafka.gui.controller import Controller
+
+import urwid
 
 import threading
 
@@ -25,6 +28,9 @@ class Bootstrap:
             config=config,
             kafka_adapter=kafka_adapter,
         )
+
+        controller = Controller(Bootstrap.bootstraped)
+        controller.run()
 
         logging.info("BOOTSTRAPING Completed")
 
