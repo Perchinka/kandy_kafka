@@ -22,12 +22,15 @@ class TopicsView:
         self.elements["topics_names"].update_topics(topics_names)
         self.show()
 
-    def get_topic(self, topic_name: str):
+    def update_topic_data(self, topic: Topic):
+        self.elements["topic_data"].update(topic)
+        self.show()
+
+    def get_topic(self, topic_name: str) -> Topic:
         return self.controler.get_topic(topic_name)
     
     def show(self):
         self.columns.contents[0] = (self.elements["topics_names"].show(), self.columns.options())
-        self.controler.loop.draw_screen()
 
 
 class TopicsList:
@@ -58,12 +61,11 @@ class TopicsList:
             focus_widget, _ = self.get_focus()
             key = super().keypress(size, key)
             if self.get_focus() != (focus_widget, _):
-                self.on_focus_changed(None, None)
+                self.on_focus_changed()
             return key
         
     def filter_topics(self):
         search_text = self.search_text
-        logging.info(f"Filtering topics with search text: {search_text}")
         if search_text:
             pattern = re.compile(search_text, re.IGNORECASE)
         else:
@@ -77,7 +79,7 @@ class TopicsList:
 
     def show(self):
         self.filter_topics()
-        if self.last_focus is not None and self.last_focus < len(self.topics_list):
+        if self.last_focus is not None and self.last_focus <= len(self.topics_list):
             self.topics_list.set_focus(self.last_focus)
         return self.layout
     
@@ -91,11 +93,13 @@ class TopicsList:
             self.topics_names = topics_names
 
     def get_selected_topic(self):
-        if self.last_focus is not None and self.last_focus < len(self.topics_list):
-            return self.topics_list[self.last_focus].get_text()[0]
+        if self.topics_list:
+            original_widget = self.topics_list[self.topics_list.get_focus()[1]].original_widget
+            return original_widget.get_text()[0]
 
-    def select_topic(self, button, user_data):
+    def select_topic(self, button=None, user_data=None):
         _, self.last_focus = self.topics_list.get_focus()
+        self.parent_view.update_topic_data(self.parent_view.get_topic(self.get_selected_topic()))
 
 
 class TopicDataPanel:
