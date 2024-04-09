@@ -2,13 +2,13 @@ from typing import List
 from kandy_kafka.models import Topic
 
 import urwid
-
+import re
 
 class TopicsView:
     def __init__(self, controler):
         self.controler = controler
         self.elements = {
-            "topics_names": TopicsList(),
+            "topics_names": TopicsList(self),
             "topic_data": TopicDataPanel()
             }
         self.columns = urwid.Columns([
@@ -18,23 +18,27 @@ class TopicsView:
         
 
     def update_topics_names(self, topics_names: List[str]):
-        self.elements["topics_names"].update(topics_names)
-        self.update()
+        self.elements["topics_names"].update_topics(topics_names)
+        self.show()
 
     def get_topic(self, topic_name: str):
         return self.controler.get_topic(topic_name)
     
-    def update(self):
+    def show(self):
         self.columns.contents[0] = (self.elements["topics_names"].show(), self.columns.options())
 
 
 class TopicsList:
-    def __init__(self) -> None:
+    def __init__(self, parent_view) -> None:
+        self.parent_view = parent_view
         self.topics_names = []
         self.topics_list = urwid.SimpleFocusListWalker([])
+        self.search_field = urwid.Edit('Search: ')
+        urwid.connect_signal(self.search_field, 'change', self.update_on_search)
         self.listbox = self.FocusChangeListBox(self.topics_list, self.select_topic)
-        self.rounded_layout = urwid.LineBox(self.listbox, tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')
+        self.layout = urwid.LineBox(urwid.Pile([self.listbox]), tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')
         self.last_focus = None
+        self.layout = urwid.Pile([('pack', urwid.LineBox(self.search_field, tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')), self.layout])
 
     class FocusChangeListBox(urwid.ListBox):
         def __init__(self, body, on_focus_changed):
@@ -47,18 +51,32 @@ class TopicsList:
             if self.get_focus() != (focus_widget, _):
                 self.on_focus_changed(None, None)
             return key
+        
+    def filter_topics(self, search_text: str):
+        if search_text:
+            pattern = re.compile(search_text, re.IGNORECASE)
+            return [topic for topic in self.topics_names if pattern.search(topic)]
+        else:
+            return self.topics_names
 
     def show(self):
         self.topics_list.clear()
-        for topic_name in self.topics_names:
+        filtered_topics = self.filter_topics(self.search_field.get_edit_text())
+        for topic_name in filtered_topics:
             selectable_item = urwid.SelectableIcon(topic_name, 100)
             self.topics_list.append(urwid.AttrMap(selectable_item, None, focus_map='focused'))
         if self.last_focus is not None and self.last_focus < len(self.topics_list):
             self.topics_list.set_focus(self.last_focus)
-        return self.rounded_layout 
+        return self.layout
+    
+    def update_on_search(self, edit, new_edit_text):
+        self.update_topics()
+        self.parent_view.show()
             
-    def update(self, topics_names: List[str]):
-        self.topics_names = topics_names
+    def update_topics(self, topics_names: List[str] = None):
+        if topics_names is not None:
+            self.topics_names = topics_names
+        self.show()
 
     def get_selected_topic(self):
         if self.last_focus is not None and self.last_focus < len(self.topics_list):
