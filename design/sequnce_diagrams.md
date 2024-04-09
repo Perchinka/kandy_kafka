@@ -24,6 +24,6 @@ sequenceDiagram
     Controller->>Adapter: get_topics_names()
     Adapter->>Kafka: admin.list_topics()
     Kafka--x Adapter: ConnectionError
+    Note right of Adapter: Timeout after 5 seconds
     Adapter-->>Controller: ConnectionError
-
 ```

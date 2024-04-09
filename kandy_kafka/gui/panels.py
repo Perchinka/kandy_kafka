@@ -16,23 +16,23 @@ class Panel(ABC):
 
 class TopicsPanel(Panel):
     def __init__(self) -> None:
-        self.topics = []
+        self.topics_names = []
         self.topics_list = urwid.SimpleFocusListWalker([])
         self.listbox = urwid.ListBox(self.topics_list)
         self.rounded_layout = urwid.LineBox(self.listbox, tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')
 
     def show(self):
         self.topics_list.clear()
-        for topic in self.topics:
-            selectable_item = urwid.SelectableIcon(topic.name, 100)
+        for topic_name in self.topics_names:
+            selectable_item = urwid.SelectableIcon(topic_name, 100)
             self.topics_list.append(urwid.AttrMap(selectable_item, None, focus_map='focused'))
         return self.rounded_layout 
             
-    def update(self, topics: List[Topic]):
-        self.topics = topics
+    def update(self, topics_names: List[str]):
+        self.topics_names = topics_names
 
     def on_topic_selected(self, button, user_data):
-        self.topic_data.set_text(str(self.topics[self.topics_list.focus_position]))
+        self.topic_data.set_text(str(self.topics_names[self.topics_list.focus_position]))
 
 class TopicDataPanel(Panel):
     def __init__(self) -> None:

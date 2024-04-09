@@ -1,5 +1,6 @@
 import logging
 
+# TODO: Figure out how to write to files instead of stdout
 
 def setup_logger(log_level: str):
     # Remove all handlers associated with the root logger object.

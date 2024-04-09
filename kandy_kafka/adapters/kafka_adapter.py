@@ -14,7 +14,7 @@ from typing import Dict, List, Tuple
 
 class AbstractKafkaClusterAdapter(ABC):
     @abstractmethod
-    def get_topics_list(self) -> List[Topic]:
+    def get_topics_names(self) -> List[Topic]:
         raise NotImplementedError
 
     @abstractmethod
@@ -44,12 +44,9 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             "bootstrap.servers": f"{host}:{port}"
         })
     
-    def get_topics_list(self) -> List[Topic]:
+    def get_topics_names(self) -> List[Topic]:
         topics = self.admin_client.list_topics().topics
-        topics_list = []
-        for topic_name in topics:
-            topics_list.append(self.get_topic(topic_name))
-        return topics_list
+        return [topic_name for topic_name in topics]
     
     def get_brokers_list(self) -> List[Node]:
         brokers = self.admin_client.list_topics().brokers
@@ -90,7 +87,7 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
         
     
     def poll_data(self) -> Dict:
-        topics = self.get_topics_list()
+        topics = self.get_topics_names()
         brokers = self.get_brokers_list()
         consumer_groups = self.get_consumer_groups()
 
