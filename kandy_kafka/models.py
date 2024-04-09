@@ -22,3 +22,11 @@ class Topic(BaseModel):
     topic_id: str # TODO: Find way to convert confluent kafka Uuid to uuid.UUID
     is_internal: bool
     partitions: List[Partition]
+
+
+class Consumer(BaseModel):
+    group_id: str
+    consumer_id: str
+    host: str
+    client_id: str
+    assignments: List[Partition]
