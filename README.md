@@ -8,6 +8,7 @@ Kandy is CLI tool designed to easily manage kafka clusters directly from the com
 
 - Python 3.11
 - Poetry
+- Make
 
 ## Installation
 
@@ -16,18 +17,12 @@ Kandy is CLI tool designed to easily manage kafka clusters directly from the com
 ```bash
 git clone https://github.com/Perchinka/kandy_kafka.git
 cd kandy_kafka
-poetry install
+make install
 ```
 
 ## Usage
 
 For now you can only run the CLI tool from the source code:
-
-```bash
-poetry run kandy
-```
-
-or 
 
 ```bash
 make run
