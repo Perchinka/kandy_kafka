@@ -35,9 +35,8 @@ class TopicsList(urwid.Pile):
         super().__init__([('pack', SearchBar()), TopicsNames(topics)])
 
 class TopicDetail(RoundedBox):
-    # Make it fill the remaining space
     def __init__(self, topic: str):
-        body = urwid.Text(topic)
+        body = urwid.Filler(urwid.Text(topic), valign="top")
         super().__init__(body)
 
 class Body(urwid.Columns):
