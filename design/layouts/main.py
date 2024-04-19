@@ -4,15 +4,9 @@ import random
 import uuid
 from typing import List
 
-from panwid.datatable import DataTable, DataTableColumn
-from panwid.scroll import ScrollBar
+import logging
 
-
-class Scroller(ScrollBar):
-    _thumb_char = ("light blue", "\u2588")
-    _trough_char = ("dark blue", "\u2591")
-    _thumb_indicator_top = ("white inverse", "\u234d")
-    _thumb_indicator_bottom = ("white inverse", "\u2354")
+from panwid.datatable import DataTable, DataTableColumn, DataTableDivider
 
 
 class RoundedBox(urwid.LineBox):
@@ -41,16 +35,40 @@ class SearchBar(RoundedBox):
 class TopicsDataTable(RoundedBox):
     def __init__(self, topics: List):
         columns = [
-            DataTableColumn("topic", "Topic"),
-            DataTableColumn("partition", "Partition"),
-            DataTableColumn("brokers", "Brokers"),
-            DataTableColumn("size", "Size"),
+            DataTableColumn(
+                "topic",
+                "Topic",
+                width=("weight", 2),
+                align="center",
+                format_fn=lambda x: x.upper(),
+            ),
+            DataTableDivider(u"\N{BOX DRAWINGS DOUBLE VERTICAL}"),
+            DataTableColumn(
+                "partitions",
+                "Partitions",
+                align="center",
+                width=(13),
+            ),
+            DataTableDivider(u"\N{BOX DRAWINGS DOUBLE VERTICAL}"),
+            DataTableColumn(
+                "brokers",
+                "Brokers",
+                align="center",
+            ),
+            DataTableDivider(u"\N{BOX DRAWINGS DOUBLE VERTICAL}"),
+            DataTableColumn(
+                "size",
+                "Size",
+                align="center",
+            ),
         ]
-        data = [dict(topic=urwid.LineBox(urwid.Text(topic)), partition=partition, brokers=brokers, size=size) for topic, partition, brokers, size in topics]
+        data = [dict(topic=topic, partitions=partitions, brokers=brokers, size=size) for topic, partitions, brokers, size in topics]
         table = DataTable(
             columns=columns,
             data=data,
-            with_scrollbar=Scroller
+            with_scrollbar=True,
+            sort_refocus=True,
+            cell_selection=True
         )
         super().__init__(urwid.Frame(table))
 
@@ -66,15 +84,34 @@ class TopicDetail(RoundedBox):
         super().__init__(body)
 
 
-class Body(urwid.Columns):
+class TopicsView(urwid.Columns):
     def __init__(self, topics: List):
         super().__init__([TopicsList(topics), TopicDetail("Topic detatils")])
 
 
 class Main:
     def __init__(self, topics: List):
-        palette = [("reverse", "light gray", "black")]
-        layout = urwid.Frame(body=Body(topics), header=HorizontalMenu())
+        palette = [
+            ('table_row_body', "", ""),
+            ('table_row_body focused', "white", 'black'),
+            ('table_row_body column_focused', "", 'black'),
+            ('table_row_body highlight', "", 'dark red'),
+            ('table_row_body highlight focused', "", 'black'),
+            ('table_row_body highlight column_focused', "", 'black'),
+            ('table_row_header', "", ''),
+            ('table_row_header focused', "", ''),
+            ('table_row_header column_focused', "", 'black'),
+            ('table_row_header highlight', "", 'yellow'),
+            ('table_row_header highlight focused', "", 'yellow'),
+            ('table_row_header highlight column_focused', "", 'yellow'),
+            ('table_row_footer', "", 'white'),
+            ('table_row_footer focused', "", 'dark gray'),
+            ('table_row_footer column_focused', "", 'black'),
+            ('table_row_footer highlight', "", 'yellow'),
+            ('table_row_footer highlight focused', "", 'yellow'),
+            ('table_row_footer highlight column_focused', "", 'yellow') 
+        ]
+        layout = urwid.Frame(body=TopicsView(topics), header=HorizontalMenu())
         self.loop = urwid.MainLoop(layout, palette=palette)
 
     def run(self):
@@ -83,5 +120,6 @@ class Main:
 
 if __name__ == "__main__":
     # random data
-    topics = [(uuid.uuid4().hex, random.randint(1, 10), random.randint(1, 10), random.randint(1, 10)) for _ in range(10)]
+    n = 100
+    topics = [(uuid.uuid4().hex, random.randint(1, 10), random.randint(1, 10), random.randint(1, 10)) for _ in range(n)]
     Main(topics).run()
