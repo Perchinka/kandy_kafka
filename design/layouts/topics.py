@@ -4,8 +4,6 @@ import random
 import uuid
 from typing import List
 
-import logging
-
 from panwid.datatable import DataTable, DataTableColumn, DataTableDivider
 
 
@@ -18,10 +16,9 @@ class HorizontalMenu(urwid.Padding):
     def __init__(self):
         menu = urwid.Columns(
             [
-                urwid.SelectableIcon("Home"),
+                urwid.SelectableIcon("Consumers"),
                 urwid.SelectableIcon("Topics"),
-                urwid.SelectableIcon("About"),
-                urwid.SelectableIcon("Exit"),
+                urwid.SelectableIcon("Brokers"),
             ],
         )
         super().__init__(menu, left=2, right=100, min_width=100)
@@ -95,7 +92,7 @@ class Main:
             ('table_row_body', "", ""),
             ('table_row_body focused', "white", 'black'),
             ('table_row_body column_focused', "", 'black'),
-            ('table_row_body highlight', "", 'dark red'),
+            ('table_row_body highlight', "", ""),
             ('table_row_body highlight focused', "", 'black'),
             ('table_row_body highlight column_focused', "", 'black'),
             ('table_row_header', "", ''),
@@ -119,7 +116,6 @@ class Main:
 
 
 if __name__ == "__main__":
-    # random data
     n = 100
     topics = [(uuid.uuid4().hex, random.randint(1, 10), random.randint(1, 10), random.randint(1, 10)) for _ in range(n)]
     Main(topics).run()
