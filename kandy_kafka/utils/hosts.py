@@ -40,7 +40,6 @@ def read_hosts():
     with config_file_path.open('r') as file:
         config_data = yaml.safe_load(file)
     
-    print(config_data)
     return config_data
 
 
