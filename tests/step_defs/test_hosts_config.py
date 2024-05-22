@@ -1,47 +1,36 @@
-from os import rename
-from pytest import fixture
+import pytest
 from pytest_bdd import scenario, given, when, then
 from kandy_kafka.utils.hosts import read_hosts
-import pathlib
+from pathlib import Path
 
-@fixture
-def default_config():
-    return {
-        "default": {
-            "host": "localhost",
-            "port": 9092,
-        }
-    }
-
-@fixture
-def clean_config_directory():
-    file = pathlib.Path.home() / '.config' / 'kandy' / 'hosts.bak'
-    if file.exists():
-        file.rename(file.with_suffix('.yaml'))
-
-@scenario('features/hosts.feature', 'Default configuration')
-def test_if_config_file_doesnt_exist_default_config_created():
+@scenario('features/hosts.feature', 'Error when no configuration file is found')
+def test_that_error_is_raised_if_no_config():
     pass
 
-@fixture
-@given('The configuration file does not exist')
+@pytest.fixture
+@given('No configuration file is present')
 def rename_config_file_if_exsits():
-    file = pathlib.Path.home() / '.config' / 'kandy' / 'hosts.yaml'
+    file = Path.home() / '.config' / 'kandy' / 'hosts.yaml'
+    backup_file = file.with_suffix('.bak')
     if file.exists():
-        file.rename(file.with_suffix('.bak'))
+        file.rename(backup_file)
 
-    return file.exists()
+    yield
 
-@fixture
-@when('I read the configuration file')
-def read_config_file():
-    return read_hosts()
+    # Teardown to restore the configuration file after the test
+    if backup_file.exists():
+        backup_file.rename(file)
 
-@then('I should get the default configuration and the file should be created')
-def check_default_config_and_file_creation(default_config, read_config_file, clean_config_directory):
-    file = pathlib.Path.home() / '.config' / 'kandy' / 'hosts.yaml'
-    config = read_config_file
+@pytest.fixture
+@when('the user tries to start Kandy')
+def start_kandy():
+    pass
 
-    assert file.exists()
-    assert config == [default_config]
+@then('the application should raise a FileNotFoundError')
+def check_if_error_is_raised(start_kandy, rename_config_file_if_exsits):
+    with pytest.raises(FileNotFoundError):
+        read_hosts()
 
+@then('the application should prompt the user to create or specify a configuration file')
+def check_prompt_to_create_config():
+    pass

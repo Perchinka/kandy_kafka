@@ -10,7 +10,7 @@ class HostConfig(BaseModel):
     @field_validator('host')
     def validate_host(cls, v):
         if not isinstance(v, str) or not v:
-            raise ValueError("Host must be a non-empty string")
+            raise ValueError("Host must be a non-empty string") 
         return v
 
     @field_validator('port')
@@ -23,20 +23,9 @@ class HostConfig(BaseModel):
 def read_hosts():
     config_file_path = Path.home() / '.config' / 'kandy' / 'hosts.yaml'
     
-    default_config = [
-        {
-            "default": {
-                "host": "localhost",
-                "port": 9092
-            },
-        }
-    ]
-
     if not config_file_path.exists():
-        config_file_path.parent.mkdir(parents=True, exist_ok=True)
-        with config_file_path.open('w') as file:
-            yaml.dump(default_config, file)
-    
+        raise FileNotFoundError("Configuration file not found")
+
     with config_file_path.open('r') as file:
         config_data = yaml.safe_load(file)
     
