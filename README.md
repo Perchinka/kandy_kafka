@@ -38,6 +38,6 @@ Contributions are welcome! If you'd like to contribute to this project, please f
 - Push to the branch: git push origin feature-name.
 - Submit a pull request.
 
-> Will be update soon, to busy, fixing bugs :D
+> Will be update soon, too busy, fixing bugs :D
 
 
