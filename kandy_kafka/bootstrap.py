@@ -5,6 +5,7 @@ from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
 from kandy_kafka.config import Config
 from kandy_kafka.gui.controller import Controller
 
+
 @dataclass
 class Bootstraped:
     config: Config
