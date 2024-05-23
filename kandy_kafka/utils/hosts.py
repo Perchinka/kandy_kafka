@@ -1,19 +1,22 @@
+import re
 import yaml
 from pydantic import BaseModel, field_validator, StringConstraints
-from typing import List, Union, Annotated
+from typing import List, Annotated
 from pathlib import Path
 
-HostName = Annotated[str, StringConstraints(pattern=r"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$")]
-IpV4 = Annotated[str, StringConstraints(pattern=r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")]
+HostName = re.compile(r"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$")
+IpV4 = re.compile(r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")
 
 class Cluster(BaseModel):
-    host: Union[IpV4, HostName]
+    host: str
     port: int
     
     @field_validator('host')
     def validate_host(cls, v):
         if not isinstance(v, str) or not v:
             raise ValueError("Host must be a non-empty string")
+        if not HostName.match(v) and not IpV4.match(v):
+            raise ValueError("Host must be a valid hostname or IP address")
 
         return v
 

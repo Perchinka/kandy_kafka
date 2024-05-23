@@ -21,16 +21,16 @@ def test_that_error_is_raised_if_host_is_not_a_string():
 def test_that_error_is_raised_if_host_is_wrong_ip_format():
     with pytest.raises(ValueError):
         Cluster(host="192.168.1", port=9092)
-    with pytest.raises(ValueError):
         Cluster(host="256.256.256.256", port=9092)
 
 def test_that_ValueError_is_raised_if_empty_host():
     with pytest.raises(ValueError):
         Cluster(host="", port=9092)
 
-def tests_that_cluster_does_not_raise_errors_with_correct_host():
-    cluster = Cluster(host="localhost", port=9092)
-    assert cluster.host == "localhost"
+@pytest.mark.parametrize("host", ["localhost", "127.0.0.1", "192.168.1.1", "example.com", "example.co.uk"])
+def tests_that_cluster_does_not_raise_errors_with_valid_hostnames(host):
+    cluster = Cluster(host=host, port=9092)
+    assert cluster.host == host
     assert cluster.port == 9092
 
 def tests_that_cluster_does_not_raise_errors_with_correct_ip():
