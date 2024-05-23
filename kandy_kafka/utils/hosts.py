@@ -1,16 +1,20 @@
 import yaml
-from pydantic import BaseModel, field_validator 
-from typing import List
+from pydantic import BaseModel, field_validator, StringConstraints
+from typing import List, Union, Annotated
 from pathlib import Path
 
-class HostConfig(BaseModel):
-    host: str
-    port: int
+HostName = Annotated[str, StringConstraints(pattern=r"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$")]
+IpV4 = Annotated[str, StringConstraints(pattern=r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")]
 
+class Cluster(BaseModel):
+    host: Union[IpV4, HostName]
+    port: int
+    
     @field_validator('host')
     def validate_host(cls, v):
         if not isinstance(v, str) or not v:
-            raise ValueError("Host must be a non-empty string") 
+            raise ValueError("Host must be a non-empty string")
+
         return v
 
     @field_validator('port')
@@ -32,10 +36,10 @@ def read_hosts():
     return config_data
 
 
-def get_hosts() -> List[HostConfig]:
+def get_hosts() -> List[Cluster]:
     config_data = read_hosts()
 
-    return [HostConfig(**host) for _,host in config_data.items()]
+    return [Cluster(**host) for _,host in config_data.items()]
 
 
 if __name__ == "__main__":
