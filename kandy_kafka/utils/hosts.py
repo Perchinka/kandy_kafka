@@ -1,7 +1,8 @@
 import re
+import sys
 import yaml
 from pydantic import BaseModel, field_validator, StringConstraints
-from typing import List, Annotated
+from typing import List 
 from pathlib import Path
 
 HostName = re.compile(r"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$")
@@ -34,7 +35,11 @@ def read_hosts():
         raise FileNotFoundError("Configuration file not found")
 
     with config_file_path.open('r') as file:
-        config_data = yaml.safe_load(file)
+        try:
+            config_data = yaml.load(file, yaml.BaseLoader)
+        except yaml.YAMLError as e:
+            sys.stderr.write(f"Syntax error in the configuration file")
+            raise e
     
     return config_data
 
