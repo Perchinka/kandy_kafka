@@ -34,7 +34,7 @@ class AbstractKafkaClusterAdapter(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def poll_data(self) -> Tuple[List[Topic], List[Node], List[str]]:
+    def poll_data(self) -> Dict: 
         raise NotImplementedError
       
 

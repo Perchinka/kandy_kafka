@@ -17,6 +17,8 @@ class Bootstrap:
     def __call__(self, *args: Any, **kwds: Any) -> Bootstraped:
         logging.info("ATTEMPTING TO BOOTSTRAP - loading config")
         config = Config()
+        
+        # Here I should load hosts config and ask user to choose cluster
 
         logging.info("ATTEMPTING TO BOOTSTRAP - creating KafkaAdapter")
         kafka_adapter = KafkaAdapter(config.KAFKA_HOST, config.KAFKA_PORT)

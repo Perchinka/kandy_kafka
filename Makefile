@@ -14,7 +14,7 @@ stop_kafka: ## Stop local kafka docker
 	@docker-compose -f docker-compose.kafka.yaml down
 
 test: ## Run tests
-	@poetry run pytest tests/
+	@poetry run pytest
 
 run: ## Run the application
 	@poetry run python -m kandy
