@@ -75,8 +75,7 @@ def config_file_with_invalid_yaml_syntax(config_file):
     config_file.write_text(
         "]["
     ) 
-    # As I use yaml.safe_load, it should raise same error as everything else
-    # Well, I could write some invalid yaml, but naaaah :D
+    # Well, I could write some invalid yaml fixtures, but naaaah :D
 
 @then("application should raise yaml error")
 def check_yaml_error(config, config_file):
