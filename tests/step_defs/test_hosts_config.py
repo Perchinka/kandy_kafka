@@ -17,13 +17,13 @@ def non_existing_config_file(tmp_path):
 @pytest.fixture
 @when('system loads config')
 def config():
-    return Config(clustername='default')
+    return Config()
 
 @then('application should prompt user to create or specify a configuration file')
 def check_prompt_to_create_config(config, non_existing_config_file):
     with pytest.raises(HostsFileNotFound):
         config.hosts_file = non_existing_config_file
-        config.load_hosts()
+        config.load_hosts('default')
 
 # Wrong syntax scenario
 @pytest.fixture
@@ -48,9 +48,10 @@ def config_file_with_wrong_syntax(config_file, error_type):
 def check_promt_to_fix_syntax(config, error, config_file):
     print(error) # TODO check that actual error message is in the stderr (Or stdout)
     with pytest.raises(HostsFileHasWrongSyntax):
-        config.load_hosts(config_file)
+        config.load_hosts('default', config_file)
 
 
+# Correct syntax scenario
 @pytest.fixture
 @given("Configuration file has valid syntax")
 def config_file_with_correct_syntax(config_file):
@@ -64,11 +65,12 @@ def config_file_with_correct_syntax(config_file):
 
 @then("config should have valid connection details")
 def check_config_connection_details(config, config_file):
-    config.load_hosts(config_file)
+    config.load_hosts('default', config_file)
     assert config.KAFKA_HOST == "localhost"
     assert config.KAFKA_PORT == 9092
 
 
+# Invalid yaml syntax scenario
 @pytest.fixture
 @given("Configuration file has invalid yaml syntax")
 def config_file_with_invalid_yaml_syntax(config_file):
@@ -80,4 +82,4 @@ def config_file_with_invalid_yaml_syntax(config_file):
 @then("application should raise yaml error")
 def check_yaml_error(config, config_file):
     with pytest.raises(yaml.YAMLError):
-        config.load_hosts(config_file)
+        config.load_hosts('default', config_file)

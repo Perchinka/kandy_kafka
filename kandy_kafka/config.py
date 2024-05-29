@@ -17,19 +17,21 @@ class Config:
     
     PALETTE: List
 
-    def __init__(self, clustername = None) -> None:
+    def __init__(self, host = None, port = None) -> None:
         self.LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
         logger.setup_logger(self.LOGGING_LEVEL) 
     
         self.hosts_file = Path.home() / ".config" / "kandy" / "hosts.yaml"
-        self.clustername = clustername
-
+        
+        self.KAFKA_HOST = host 
+        self.KAFKA_PORT = port
+        
         self.PALETTE = [
             ('focused', 'black', 'white'),
             ('colored', 'dark blue', '') 
         ] # TODO will move it to the config file in feature realises
 
-    def load_hosts(self, config_file = None):
+    def load_hosts(self, clustername='default', config_file = None):
         if not self.hosts_file.exists():
             raise HostsFileNotFound(f"Hosts file {self.hosts_file} not found")
         
@@ -41,13 +43,12 @@ class Config:
             if hosts is None:
                 raise HostsFileHasWrongSyntax(f"Hosts file {self.hosts_file} is empty")
            
-            if self.clustername not in hosts:
-                raise HostsFileHasWrongSyntax(f"Clustername {self.clustername} not found in {self.hosts_file}")
+            if clustername not in hosts:
+                raise HostsFileHasWrongSyntax(f"Clustername {clustername} not found in {self.hosts_file}")
             
-            cluster = hosts[self.clustername]
+            cluster = hosts[clustername]
             self.KAFKA_HOST = cluster.get("host")
             self.KAFKA_PORT = cluster.get("port")
             
             if not self.KAFKA_HOST or not self.KAFKA_PORT:
                 raise HostsFileHasWrongSyntax(f"Host or port not found in {self.hosts_file}")
-
