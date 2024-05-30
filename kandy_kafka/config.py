@@ -31,7 +31,7 @@ class Config:
             ('colored', 'dark blue', '') 
         ] # TODO will move it to the config file in feature realises
 
-    def load_hosts(self, clustername='default', config_file = None):
+    def load_hosts(self, clustername='default', config_file = None) -> None:
         if not self.hosts_file.exists():
             raise HostsFileNotFound(f"Hosts file {self.hosts_file} not found")
         
