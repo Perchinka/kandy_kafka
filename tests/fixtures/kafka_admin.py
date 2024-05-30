@@ -13,6 +13,7 @@ def server():
         port = 29092
     )
 
+
 @pytest.fixture()
 def kafka_admin(server):
     """Fixture to provide a Kafka Admin client for the duration of the test module."""
