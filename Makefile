@@ -24,7 +24,7 @@ test_behaviour: ## Run behaviour tests
 	@poetry run pytest tests/step_defs
 	
 test_integration: start_kafka ## Run integration_test tests
-	-@poetry run pytest integration_test
+	-@poetry run pytest tests/integration -vv
 	@$(MAKE) stop_kafka
 
 test: start_kafka ## Run all tests

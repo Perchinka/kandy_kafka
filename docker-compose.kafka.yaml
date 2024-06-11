@@ -1,47 +1,62 @@
-version: '3.8'
-
 services:
   zookeeper:
-      image: "confluentinc/cp-zookeeper"
-      ports:
-        - 32181:32181
-      environment:
-        - ZOOKEEPER_CLIENT_PORT=32181
+    image: "confluentinc/cp-zookeeper"
+    ports:
+      - 32181:32181
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=32181
 
   kafka:
-      image: confluentinc/cp-kafka
-      ports:
-        - 9092:9092
-        - 29092:29092
-      healthcheck:
-        test: nc -z localhost 9092 || exit -1
-        start_period: 15s
-        interval: 5s
-        timeout: 10s
-        retries: 10
-      depends_on:
-        - zookeeper
-      environment:
-        - KAFKA_BROKER_ID=1
-        - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
-        - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-        - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP = PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-        - KAFKA_INTER_BROKER_LISTENER_NAME = PLAINTEXT
-        - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR = 1
-    
+    image: confluentinc/cp-kafka
+    ports:
+      - 9092:9092
+      - 29092:29092
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+
   init-kafka:
     image: confluentinc/cp-kafka
     depends_on:
       kafka:
         condition: service_healthy
-  #   entrypoint: ["/bin/sh", "-c"]
-  #   command: |
-  #     "
-  #     # blocks until kafka is reachable
-  #     kafka-topics --bootstrap-server kafka:9092 --list
-  #     echo -e 'Creating kafka topics'
-  #     kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test --replication-factor 1 --partitions 1
-  #     kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test2 --replication-factor 1 --partitions 1
-  #     echo -e 'Successfully created the following topics:'
-  #     kafka-topics --bootstrap-server kafka:9092 --list
-  #     "
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test2 --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test3 --replication-factor 1 --partitions 1
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:9092 --list
+
+      echo 'Kafka initialization completed.' > /tmp/healthy
+      "
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/healthy"]
+      start_period: 40s
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  my-app:
+    build:
+      context: .
+    depends_on:
+      init-kafka:
+        condition: service_healthy
+

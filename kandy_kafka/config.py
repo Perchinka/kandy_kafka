@@ -17,7 +17,7 @@ class Config:
     
     PALETTE: List
 
-    def __init__(self, host = None, port = None) -> None:
+    def __init__(self, host = "localhost", port = 29092) -> None:
         self.LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
         logger.setup_logger(self.LOGGING_LEVEL) 
     

@@ -1,45 +1,24 @@
 import pytest
 from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
-from confluent_kafka.admin import NewTopic
+from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka import Consumer, Producer
 
 
 @pytest.fixture
 def kafka_adapter(server):
+    """Instantiate a KafkaAdapter object and return it as a fixture"""
     adapter = KafkaAdapter(server.HOST, server.PORT)
     yield adapter
 
-@pytest.fixture
-def kafka_topics(kafka_admin):
-    """Fixture to create test topics in a kafka cluster"""
-    topics = [
-        "test_topic_1",
-        "test_topic_2",
-        "test_topic_3"
-    ]
-    
-    new_topics = [NewTopic(topic, num_partitions=1, replication_factor=1) for topic in topics]
-    fs = kafka_admin.create_topics(new_topics)
-    
-    for topic, f in fs.items():
-        try:
-            f.result()
-            print(f"Topic {topic} created")
-        except Exception as e:
-            print(f"Failed to create topic {topic}: {e}")
 
-    yield topics
-    
-    fs = kafka_admin.delete_topics(topics)
-    for topic, f in fs.items():
-        try:
-            f.result()
-            print(f"Topic {topic} deleted")
-        except Exception as e:
-            print(f"Failed to delete topic {topic}: {e}")
-
-
-def test_should_return_topic_list(kafka_adapter, kafka_topics):
+def test_should_return_topic_list(kafka_adapter):
     topics = kafka_adapter.get_topics()
     assert isinstance(topics, list)
-    assert set(topics) == set(kafka_topics)
+    assert set(topics) == set(["test","test2","test3"])
 
+
+def test_should_return_messages_from_topic(kafka_adapter):
+    messages = kafka_adapter.get_messages("test_topic_1")
+    assert isinstance(messages, list)
+    assert len(messages) == 10
+    assert all(isinstance(message, str) for message in messages)
