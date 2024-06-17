@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from confluent_kafka.admin import AdminClient
 from confluent_kafka import Consumer, Producer, TopicPartition
-import datetime
+from datetime import datetime
 
 from typing import List
 
@@ -30,6 +30,13 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
         return list(topics)
 
     def get_messages(self, topic: str) -> List[str]:
-        tp = TopicPartition(topic, 0, int(datetime.datetime.now().timestamp()*1000))
-        msgs = self.consumer.offsets_for_times(tp)
-        return [msgs]
+        now = int(datetime.now().timestamp() * 1000)
+        one_hour_ago = now - (60 * 60 * 1000)
+
+        topic_partition = TopicPartition(topic, 0, one_hour_ago)
+        self.consumer.assign([topic_partition])
+
+        self.consumer.seek(topic_partition)
+    
+        messages = self.consumer.consume(timeout=1)
+        return messages

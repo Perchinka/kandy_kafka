@@ -12,7 +12,7 @@ install: ## Install dependencies
 	@echo "  port: 29092" >> ~/.config/kandy/hosts.yaml
 
 start_kafka: ## Start local kafka docker
-	@docker-compose -f docker-compose.kafka.yaml up -d --build
+	docker-compose -f docker-compose.kafka.yaml up -d --build --remove-orphans --wait
 
 stop_kafka: ## Stop local kafka docker
 	@docker-compose -f docker-compose.kafka.yaml down

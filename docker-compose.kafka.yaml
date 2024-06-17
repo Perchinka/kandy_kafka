@@ -12,7 +12,7 @@ services:
       - 9092:9092
       - 29092:29092
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      test: nc -z localhost 9092 || exit -1
       start_period: 15s
       interval: 5s
       timeout: 10s
@@ -41,22 +41,14 @@ services:
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test --replication-factor 1 --partitions 1
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test2 --replication-factor 1 --partitions 1
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test3 --replication-factor 1 --partitions 1
-      echo -e 'Successfully created the following topics:'
-      kafka-topics --bootstrap-server kafka:9092 --list
-
-      echo 'Kafka initialization completed.' > /tmp/healthy
+      echo "askdl" >> /tmp/healthy
+      sleep 10 
+      # Fix this later. Replace sleep with sort of check
       "
+
     healthcheck:
       test: ["CMD", "test", "-f", "/tmp/healthy"]
-      start_period: 40s
-      interval: 5s
+      interval: 10s
       timeout: 10s
       retries: 5
-
-  my-app:
-    build:
-      context: .
-    depends_on:
-      init-kafka:
-        condition: service_healthy
 
