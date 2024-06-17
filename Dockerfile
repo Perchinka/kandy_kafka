@@ -1,3 +1,11 @@
-FROM alpine:3.12
+FROM confluentinc/cp-kafka:latest
 
-CMD ["echo", "Hello World"]
+WORKDIR /app
+
+COPY tests/kafka_setup.sh ./create_and_fill_topics.sh
+
+USER root
+RUN chmod +x ./create_and_fill_topics.sh
+
+CMD ["/bin/bash", "-c", "./create_and_fill_topics.sh"]
+

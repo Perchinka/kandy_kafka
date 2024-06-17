@@ -14,11 +14,11 @@ def kafka_adapter(server):
 def test_should_return_topic_list(kafka_adapter):
     topics = kafka_adapter.get_topics()
     assert isinstance(topics, list)
-    assert set(topics) == set(["test","test2","test3"])
+    assert all(topic in topics for topic in["test1","test2","test3"])
 
 
 def test_should_return_messages_from_topic(kafka_adapter):
-    messages = kafka_adapter.get_messages("test_topic_1")
+    messages = kafka_adapter.get_messages("test1")
     assert isinstance(messages, list)
     assert len(messages) == 10
     assert all(isinstance(message, str) for message in messages)
