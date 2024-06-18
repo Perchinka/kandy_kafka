@@ -6,7 +6,7 @@ class Server:
         self.HOST = host
         self.PORT = port
 
-@pytest.fixture()
+@pytest.fixture
 def server():
     return Server(
         host = 'localhost',
@@ -14,7 +14,7 @@ def server():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def kafka_admin(server):
     """Fixture to provide a Kafka Admin client for the duration of the test module."""
     client = AdminClient({'bootstrap.servers': f"{server.HOST}:{server.PORT}"})

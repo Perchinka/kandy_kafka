@@ -7,4 +7,4 @@ def producer(server):
         'bootstrap.servers': f'{server.HOST}:{server.PORT}'
     })
     yield producer
-    producer.close()
+

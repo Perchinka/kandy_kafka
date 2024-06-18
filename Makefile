@@ -12,7 +12,7 @@ install: ## Install dependencies
 	@echo "  port: 29092" >> ~/.config/kandy/hosts.yaml
 
 start_kafka: ## Start local kafka docker
-	@docker-compose -f docker-compose.kafka.yaml up -d --build
+	docker-compose -f docker-compose.kafka.yaml up -d --build --remove-orphans --wait
 
 stop_kafka: ## Stop local kafka docker
 	@docker-compose -f docker-compose.kafka.yaml down
@@ -24,7 +24,7 @@ test_behaviour: ## Run behaviour tests
 	@poetry run pytest tests/step_defs
 	
 test_integration: start_kafka ## Run integration_test tests
-	-@poetry run pytest integration_test
+	-@poetry run pytest tests/integration -vv
 	@$(MAKE) stop_kafka
 
 test: start_kafka ## Run all tests
