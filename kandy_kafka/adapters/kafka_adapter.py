@@ -1,96 +1,85 @@
 from abc import ABC, abstractmethod
-import uuid
-from confluent_kafka import TopicCollection
-from confluent_kafka.admin import AdminClient, TopicDescription
-import logging
+from confluent_kafka.admin import AdminClient
+from confluent_kafka import Consumer, KafkaException, Producer, TopicPartition
+from datetime import datetime, timedelta
 
-from kandy_kafka.models import (
-    Topic,
-    Partition,
-    Node,
-    Consumer
-)
-from typing import Dict, List, Tuple
+from typing import List
+
+import logging 
 
 class AbstractKafkaClusterAdapter(ABC):
     @abstractmethod
-    def get_topics_names(self) -> List[Topic]:
+    def get_topics(self) -> List[str]:
         raise NotImplementedError
 
     @abstractmethod
-    def get_brokers_list(self) -> List[Node]:
+    def get_messages(self, topic: str) -> List[str]:
         raise NotImplementedError
-    
-    @abstractmethod
-    def get_topic(self, topic_name: str) -> Topic:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def get_broker(self, broker_id: int) -> Node:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def get_consumer_groups(self) -> List[List[Consumer]]:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def poll_data(self) -> Tuple[List[Topic], List[Node], List[str]]:
-        raise NotImplementedError
-      
 
 class KafkaAdapter(AbstractKafkaClusterAdapter):
     def __init__(self, host: str, port: int):
         self.admin_client = AdminClient({
             "bootstrap.servers": f"{host}:{port}"
         })
-    
-    def get_topics_names(self) -> List[Topic]:
-        topics = self.admin_client.list_topics().topics
-        return [topic_name for topic_name in topics]
-    
-    def get_brokers_list(self) -> List[Node]:
-        brokers = self.admin_client.list_topics().brokers
-        brokers_list = []
-        for broker_id in brokers:
-            brokers_list.append(self.get_broker(broker_id))
-        return brokers_list
+        self.consumer: Consumer = Consumer({
+                                "bootstrap.servers": f"{host}:{port}",
+                                "group.id": "kandy",
+                                "auto.offset.reset": "earliest"
+                            })
 
-    
-    def get_topic(self, topic_name: str) -> Topic:
-        topic = self.admin_client.describe_topics(TopicCollection([topic_name]))[topic_name].result()
-        partitions = []
-        for partition in topic.partitions:
-            replicas = []
-            isr = []
-            for replica in partition.replicas:
-                replicas.append(Node(id=replica.id, host=replica.host, port=replica.port, rack=replica.rack))
-            for isr_node in partition.isr:
-                isr.append(Node(id=isr_node.id, host=isr_node.host, port=isr_node.port, rack=isr_node.rack))
-            partitions.append(Partition(id=partition.id,
-                                        leader=Node(id=partition.leader.id,
-                                                    host=partition.leader.host,
-                                                    port=partition.leader.port,
-                                                    rack=partition.leader.rack),
-                                        replicas=replicas, 
-                                        isr=isr))
-        return Topic(name=topic_name, topic_id=str(topic.topic_id), is_internal=topic.is_internal, partitions=partitions)
-    
+    def get_topics(self) -> List[str]:
+        topics = self.admin_client.list_topics(timeout=10).topics
+        return list(topics)
 
-    def get_broker(self, broker_id: int):
-        broker = self.admin_client.describe_cluster().brokers[broker_id]
-        return Node(id=broker.id, host=broker.host, port=broker.port, rack=broker.rack)
-    
+    def get_messages(self, topic: str) -> List[str]:
+        now = int(datetime.now().timestamp() * 1000)
+        one_hour_ago = now - (60 * 60 * 1000)
 
-    def get_consumer_groups(self):
-        consumer_groups = self.admin_client.list_groups()
-        return consumer_groups
-        
-    
-    def poll_data(self) -> Dict:
-        topics = self.get_topics_names()
-        brokers = self.get_brokers_list()
-        consumer_groups = self.get_consumer_groups()
+        current_time = datetime.now()
+        start_time = current_time - timedelta(hours=1)
+        end_time = current_time
 
-        return {"topic": topics,
-                "broker": brokers,
-                "consumer_group": consumer_groups}
+        # Convert datetime to timestamps in milliseconds
+        start_timestamp = int(start_time.timestamp() * 1000)
+        end_timestamp = int(end_time.timestamp() * 1000)
+
+        self.consumer.assign([TopicPartition(topic, p) for p in self.consumer.list_topics(topic).topics[topic].partitions.keys()])
+
+        partitions_for_timestamp = [TopicPartition(topic, p, start_timestamp) for p in self.consumer.list_topics(topic).topics[topic].partitions.keys()]
+        start_offsets = self.consumer.offsets_for_times(partitions_for_timestamp)
+
+        partitions_for_timestamp = [TopicPartition(topic, p, end_timestamp) for p in self.consumer.list_topics(topic).topics[topic].partitions.keys()]
+        end_offsets = self.consumer.offsets_for_times(partitions_for_timestamp)
+
+        for partition in start_offsets:
+            self.consumer.seek(partition)
+
+        messages = []
+
+        try:
+            while True:
+                msg = self.consumer.poll(timeout=1.0)  # Poll for messages
+
+                if msg is None:
+                    break  # No message received, continue polling
+
+                if msg.error():
+                    if msg.error().code() == KafkaException._PARTITION_EOF:
+                        # End of partition event
+                        print(f"End of partition reached {msg.partition()}")
+                    elif msg.error():
+                        raise KafkaException(msg.error())
+                else:
+                    if msg.timestamp()[1] > end_timestamp:
+                        print("End time reached. Stopping consumption.")
+                        break
+
+                    messages.append(msg.value().decode('utf-8'))
+                    print(f"Received message: {msg.value().decode('utf-8')}")
+
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.consumer.close()
+            print("Total messages consumed:", len(messages))
+            return messages
