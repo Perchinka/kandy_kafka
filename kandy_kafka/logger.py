@@ -1,6 +1,10 @@
 import logging
 
+
 def setup_logger(log_level: str):
+    """
+    Set up the logger for the application.
+    """
     # Remove all handlers associated with the root logger object.
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)

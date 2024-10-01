@@ -6,7 +6,7 @@ help:
 
 install: ## Install dependencies
 	@poetry install
-	@mkdir ~/.config/kandy
+	-@mkdir -p ~/.config/kandy
 	@echo "default:" >> ~/.config/kandy/hosts.yaml
 	@echo "  host: localhost" >> ~/.config/kandy/hosts.yaml
 	@echo "  port: 29092" >> ~/.config/kandy/hosts.yaml
