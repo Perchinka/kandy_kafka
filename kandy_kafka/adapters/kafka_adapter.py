@@ -58,9 +58,10 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
 
         self.consumer.subscribe([topic], on_assign=self.on_assign)
         while running:
-            msg = self.consumer.poll(timeout=5)
-            if msg is None or len(messages) > 50:
-                # TODO change 50 to custom config param, smth like messages per page
+            # Timeout isn't reliable though. # TODO Find a better way to handle connection
+            msg = self.consumer.poll(timeout=10)
+            # TODO change 50 to custom config param, smth like messages per page
+            if msg is None or len(messages) >= 50:
                 running = False
                 continue
             if msg.error():
