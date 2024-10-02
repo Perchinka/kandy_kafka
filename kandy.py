@@ -1,6 +1,8 @@
 from kandy_kafka.bootstrap import Bootstrap
 import argparse
 
+from kandy_kafka.gui.controller import Controller
+
 
 class ConditionalAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -28,7 +30,12 @@ def main():
             "If clustername is not specified, both --host and --port must be provided"
         )
 
-    Bootstrap()(clustername=args.clustername, host=args.host, port=args.port)
+    bootstrap = Bootstrap()(
+        clustername=args.clustername, host=args.host, port=args.port
+    )
+
+    # app = Controller(bootstrap)
+    # app.run()
 
 
 if __name__ == "__main__":

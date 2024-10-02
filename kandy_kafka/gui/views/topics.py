@@ -1,28 +1,24 @@
-import urwid
+from textual.widgets import DataTable, Header, Footer
+from textual.containers import Container
+from textual.app import ComposeResult
 
 
-class TopicsView:
+class TopicsView(Container):
+    """View to display topics in a table."""
+
     def __init__(self):
-        self.header_text = urwid.Text("Kafka Topics Viewer")
-        self.footer_text = urwid.Text("Press 'R' to reload topics, 'Ctrl+C' to exit")
-        self.table = urwid.SimpleFocusListWalker([])  # List to hold the table rows
-        self.body = urwid.ListBox(self.table)
-        self.frame = urwid.Frame(
-            self.body, header=self.header_text, footer=self.footer_text
-        )
+        super().__init__()
+        self.table = DataTable()
 
-    def build_table(self, topics):
-        """
-        Build a table to display topics.
-        """
+    def build_table(self, topics: list[str]):
+        """Build the DataTable widget to display the topics."""
         self.table.clear()
-        self.table.append(urwid.Text("Topic Names"))
-        self.table.append(urwid.Divider())
+        self.table.add_column("Topics")
         for topic in topics:
-            self.table.append(urwid.Text(topic))
+            self.table.add_row(topic)
 
-    def get_top_view(self):
-        """
-        Returns the main UI frame.
-        """
-        return self.frame
+    def compose(self) -> ComposeResult:
+        """Compose the view with the table."""
+        yield Header()
+        yield self.table
+        yield Footer()

@@ -1,47 +1,48 @@
-import urwid
-import logging
-import signal
+# The code block below is needed to avoid a cyclic import error, while using Bootstrap class for type-hinting
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
+from textual.widgets import Button, Footer
+
+if TYPE_CHECKING:
+    from kandy_kafka.bootstrap import Bootstraped
+
+from textual.app import App, ComposeResult
+from textual.message import Message
 from kandy_kafka.gui.views import TopicsView
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from kandy_kafka.bootstrap import Bootstraped
 
 
-class Controller:
-    def __init__(self, bootstraped: "Bootstraped"):
+class ReloadTopics(Message):
+    """Message class for reloading topics."""
+
+
+class Controller(App):
+    """Main application controller"""
+
+    BINDINGS = [("f", "fetch", "fetch")]
+    CSS_PATH = "app.tcss"  # Textual CSS file for styling
+
+    def __init__(self, bootstraped: Bootstraped):
+        super().__init__()
         self.bootstrapped = bootstraped
         self.kafka_adapter = self.bootstrapped.kafka_adapter
-        self.view = TopicsView()
-        # Load initial data
-        self.reload_topics()
+        self.view = TopicsView()  # Instantiate the TopicsView from views.py
 
-    def reload_topics(self):
+    async def reload_topics(self):
         """
         Reload the topics by pulling them from the KafkaModel and updating the TopicsView.
         """
-        topics = self.kafka_adapter.get_topics()
-        self.view.build_table(topics)
+        topics = self.kafka_adapter.get_topics()  # Fetch topics from Kafka
+        self.view.build_table(topics)  # Update the table in the view
 
-    def handle_input(self, key):
-        """
-        Handle keyboard inputs ('r' to reload, 'Ctrl-C' to exit).
-        """
-        if key == "r" or key == "R":
-            # Reload topics on 'R' press
-            self.reload_topics()
-        elif key == "ctrl c":
-            # Exit on 'Ctrl-C'
-            raise urwid.ExitMainLoop()
+    async def action_fetch(self) -> None:
+        """Handle the message to reload topics."""
+        await self.reload_topics()
 
-    def run(self):
-        """
-        Start the urwid main loop and handle signal for graceful exit.
-        """
-        loop = urwid.MainLoop(
-            self.view.get_top_view(), unhandled_input=self.handle_input
-        )
-        signal.signal(signal.SIGINT, lambda signum, frame: loop.stop())
-        loop.run()
+    def compose(self) -> ComposeResult:
+        """Compose the app layout."""
+        yield self.view  # Adds the TopicsView (table)

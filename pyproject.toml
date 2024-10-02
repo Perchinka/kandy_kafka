@@ -13,6 +13,7 @@ urwid = "^2.6.10"
 panwid = "^0.3.5"
 pydantic = "^2.6.4"
 pyyaml = "^6.0.1"
+textual = "^0.81.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^8.1.1"

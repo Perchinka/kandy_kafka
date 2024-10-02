@@ -33,7 +33,7 @@ class Bootstrap:
 
         controller = Controller(Bootstrap.bootstraped)
         controller.run()
-        # TODO make graceful connection error handling and uncomment line above
+        # TODO make graceful connection error handling
 
         logging.info("BOOTSTRAPING Completed")
 
