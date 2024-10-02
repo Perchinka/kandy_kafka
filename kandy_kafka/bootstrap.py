@@ -11,10 +11,11 @@ class Bootstraped:
     config: Config
     kafka_adapter: KafkaAdapter
 
+
 class Bootstrap:
     bootstraped: Bootstraped
-    
-    def __call__(self, *args: Any, **kwds: Any) -> Bootstraped:            
+
+    def __call__(self, *args: Any, **kwds: Any) -> Bootstraped:
         logging.info("ATTEMPTING TO BOOTSTRAP - loading config")
         config = Config(kwds["host"], kwds["port"])
 
@@ -31,7 +32,7 @@ class Bootstrap:
         )
 
         controller = Controller(Bootstrap.bootstraped)
-        # controller.run()
+        controller.run()
         # TODO make graceful connection error handling and uncomment line above
 
         logging.info("BOOTSTRAPING Completed")
