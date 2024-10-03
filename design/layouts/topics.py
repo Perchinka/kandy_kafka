@@ -79,12 +79,16 @@ class TopicsView(App):
 
     def action_sort_by_size(self) -> None:
         table = self.query_one(DataTable)
-        table.sort("Size", key=lambda x: x, reverse=self.sort_reverse("Size"))
+        table.sort(
+            "Size",
+            key=lambda x: int(x.split(" ")[0]),
+            reverse=self.sort_reverse("Size"),
+        )
 
     def action_sort_by_partitions(self) -> None:
         table = self.query_one(DataTable)
         table.sort(
-            "Partitions", key=lambda x: x, reverse=self.sort_reverse("Partitions")
+            "Partitions", key=lambda x: int(x), reverse=self.sort_reverse("Partitions")
         )
 
 

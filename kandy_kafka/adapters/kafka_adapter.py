@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from importlib.metadata import metadata
 import logging
 import confluent_kafka
 from confluent_kafka.admin import AdminClient, NewTopic
@@ -8,15 +9,16 @@ from confluent_kafka import (
     KafkaError,
     Message,
     Producer,
+    TopicCollection,
     TopicPartition,
 )
-import sys
 from typing import List
+from kandy_kafka.domain.models import Topic
 
 
 class AbstractKafkaClusterAdapter(ABC):
     @abstractmethod
-    def get_topics(self) -> List[str]:
+    def get_topics(self) -> List[Topic]:
         raise NotImplementedError
 
     @abstractmethod
@@ -41,10 +43,24 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             partition.offset = confluent_kafka.OFFSET_BEGINNING
         consumer.assign(partitions)
 
-    def get_topics(self) -> List[str]:
+    def get_topics(self) -> List[Topic]:
         topics = self.admin_client.list_topics(timeout=10).topics
+        topics = self.admin_client.describe_topics(TopicCollection(list(topics)))
 
-        return list(topics)
+        result = []
+        for _, feature in topics.items():
+            topic = feature.result()
+            result.append(
+                Topic(
+                    id=topic.topic_id,
+                    name=topic.name,
+                    is_internal=topic.is_internal,
+                    partitions=len(topic.partitions),
+                    amount_of_messages=0,  # TODO Find a way to count it without a consumer, or at least with out iterating through all messages in the topic. Probably watermark_offset is good for this purpose
+                )
+            )
+
+        return result
 
     def get_messages(self, topic: str) -> List[str]:
         # TODO Add "from offset" param, or mb something like "pagenumber"

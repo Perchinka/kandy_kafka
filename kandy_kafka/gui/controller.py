@@ -45,4 +45,4 @@ class Controller(App):
 
     def compose(self) -> ComposeResult:
         """Compose the app layout."""
-        yield self.view  # Adds the TopicsView (table)
+        yield self.view
