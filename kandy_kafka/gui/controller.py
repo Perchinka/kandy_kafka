@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from textual.widgets import Button, Footer
+from textual.widgets import Footer
 
 if TYPE_CHECKING:
     from kandy_kafka.bootstrap import Bootstraped
@@ -46,3 +46,4 @@ class Controller(App):
     def compose(self) -> ComposeResult:
         """Compose the app layout."""
         yield self.view
+        yield Footer()

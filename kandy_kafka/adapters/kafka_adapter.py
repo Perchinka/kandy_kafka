@@ -1,19 +1,16 @@
 from abc import ABC, abstractmethod
-from importlib.metadata import metadata
 import logging
 import confluent_kafka
-from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka.admin import AdminClient, TopicDescription
 from confluent_kafka import (
     Consumer,
     KafkaException,
     KafkaError,
     Message,
-    Producer,
     TopicCollection,
-    TopicPartition,
 )
 from typing import List
-from kandy_kafka.domain.models import Topic
+from kandy_kafka.domain.models import Topic, Partition, Message
 
 
 class AbstractKafkaClusterAdapter(ABC):
@@ -44,18 +41,30 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
         consumer.assign(partitions)
 
     def get_topics(self) -> List[Topic]:
-        topics = self.admin_client.list_topics(timeout=10).topics
-        topics = self.admin_client.describe_topics(TopicCollection(list(topics)))
+        metadata = self.admin_client.list_topics(timeout=10)
+        topics = self.admin_client.describe_topics(
+            TopicCollection(list(metadata.topics))
+        )
 
         result = []
         for _, feature in topics.items():
-            topic = feature.result()
+            topic: TopicDescription = feature.result()
+            amount_of_messages = 0
+
+            logging.error(type(topic))
+            partitions: List[Partition] = []
+            for partition_metadata in topic.partitions:
+                partition = Partition(topic_name=topic.name, id=partition_metadata.id)
+                partitions.append(partition)
+
+                # TODO Count messages for each partition and sum them up
+
             result.append(
                 Topic(
                     id=topic.topic_id,
                     name=topic.name,
                     is_internal=topic.is_internal,
-                    partitions=len(topic.partitions),
+                    partitions=partitions,
                     amount_of_messages=0,  # TODO Find a way to count it without a consumer, or at least with out iterating through all messages in the topic. Probably watermark_offset is good for this purpose
                 )
             )
