@@ -2,22 +2,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from textual.widgets import Footer
-
 if TYPE_CHECKING:
     from kandy_kafka.bootstrap import Bootstraped
 
+from textual.widgets import Footer, Header
 from textual.app import App, ComposeResult
-from textual.message import Message
 from kandy_kafka.gui.views import TopicsView
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from kandy_kafka.bootstrap import Bootstraped
-
-
-class ReloadTopics(Message):
-    """Message class for reloading topics."""
 
 
 class Controller(App):
@@ -37,7 +27,7 @@ class Controller(App):
         Reload the topics by pulling them from the KafkaModel and updating the TopicsView.
         """
         topics = self.kafka_adapter.get_topics()  # Fetch topics from Kafka
-        self.view.udpdate_topics(topics)  # Update the table in the view
+        self.view.show_topics(topics)  # Update the table in the view
 
     async def action_fetch(self) -> None:
         """Handle the message to reload topics."""

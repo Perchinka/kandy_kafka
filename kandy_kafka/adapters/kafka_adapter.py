@@ -49,15 +49,22 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
         result = []
         for _, feature in topics.items():
             topic: TopicDescription = feature.result()
-            amount_of_messages = 0
+            total_messages = 0
 
-            logging.error(type(topic))
             partitions: List[Partition] = []
             for partition_metadata in topic.partitions:
                 partition = Partition(topic_name=topic.name, id=partition_metadata.id)
                 partitions.append(partition)
 
-                # TODO Count messages for each partition and sum them up
+                # Getting partition by id
+                topic_partition = confluent_kafka.TopicPartition(
+                    topic.name, partition_metadata.id
+                )
+
+                # Amount_of_messages in the topic = the latest offset - the earliest one
+                low, high = self.consumer.get_watermark_offsets(topic_partition)
+                partition_message_count = high - low
+                total_messages += partition_message_count
 
             result.append(
                 Topic(
@@ -65,14 +72,14 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
                     name=topic.name,
                     is_internal=topic.is_internal,
                     partitions=partitions,
-                    amount_of_messages=0,  # TODO Find a way to count it without a consumer, or at least with out iterating through all messages in the topic. Probably watermark_offset is good for this purpose
+                    amount_of_messages=total_messages,
                 )
             )
 
         return result
 
     def get_messages(self, topic: str) -> List[str]:
-        # TODO Add "from offset" param, or mb something like "pagenumber"
+        # TODO Add "from offset" parameter and pool not 50 first messages, but 50 from specified offset
         metadata = self.consumer.list_topics(topic, timeout=10)
         if metadata.topics[topic].error is not None:
             raise KafkaException(metadata.topics[topic].error)

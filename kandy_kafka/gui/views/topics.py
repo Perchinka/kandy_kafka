@@ -6,10 +6,7 @@ from textual.widgets import (
     ListView,
     Input,
     DataTable,
-    Header,
-    Footer,
 )
-
 from kandy_kafka.domain.models import Topic
 
 
@@ -26,7 +23,7 @@ class TopicsView(Container):
         self.table = DataTable(id="topics-table")
 
     def build_table(self):
-        """Build the DataTable widget to display the topics."""
+        """Build the DataTable for topics"""
         self.table.clear()
 
         topics_table = self.query_one("#topics-table", DataTable)
@@ -42,8 +39,7 @@ class TopicsView(Container):
         ):
             topics_table.add_column(col, key=col)
 
-    def udpdate_topics(self, topics: list[Topic]):
-        """Build the DataTable widget to display the topics."""
+    def show_topics(self, topics: list[Topic]):
         self.table.clear()
 
         topics_table = self.query_one("#topics-table", DataTable)
@@ -55,8 +51,6 @@ class TopicsView(Container):
 
     def compose(self) -> ComposeResult:
         """Compose the view with the table."""
-        yield Header()
-
         yield Horizontal(
             Vertical(
                 ListView(

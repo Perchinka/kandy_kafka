@@ -30,12 +30,7 @@ def main():
             "If clustername is not specified, both --host and --port must be provided"
         )
 
-    bootstrap = Bootstrap()(
-        clustername=args.clustername, host=args.host, port=args.port
-    )
-
-    # app = Controller(bootstrap)
-    # app.run()
+    Bootstrap()(clustername=args.clustername, host=args.host, port=args.port)
 
 
 if __name__ == "__main__":
