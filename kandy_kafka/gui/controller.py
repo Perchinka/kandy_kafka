@@ -37,7 +37,7 @@ class Controller(App):
         Reload the topics by pulling them from the KafkaModel and updating the TopicsView.
         """
         topics = self.kafka_adapter.get_topics()  # Fetch topics from Kafka
-        self.view.build_table(topics)  # Update the table in the view
+        self.view.udpdate_topics(topics)  # Update the table in the view
 
     async def action_fetch(self) -> None:
         """Handle the message to reload topics."""

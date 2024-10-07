@@ -25,7 +25,7 @@ class TopicsView(Container):
         super().__init__()
         self.table = DataTable(id="topics-table")
 
-    def build_table(self, topics: list[Topic]):
+    def build_table(self):
         """Build the DataTable widget to display the topics."""
         self.table.clear()
 
@@ -41,6 +41,12 @@ class TopicsView(Container):
             "Size",
         ):
             topics_table.add_column(col, key=col)
+
+    def udpdate_topics(self, topics: list[Topic]):
+        """Build the DataTable widget to display the topics."""
+        self.table.clear()
+
+        topics_table = self.query_one("#topics-table", DataTable)
 
         for topic in topics:
             topics_table.add_row(
@@ -80,12 +86,13 @@ class TopicsView(Container):
 
     async def on_mount(self):
         """Called when app is mounted, populate the topics table with placeholders"""
+        self.build_table()
 
     def action_sort_by_size(self) -> None:
         table = self.query_one(DataTable)
         table.sort(
             "Size",
-            key=lambda x: int(x.split(" ")[0]),
+            key=lambda x: x,
             reverse=self.sort_reverse("Size"),
         )
 
