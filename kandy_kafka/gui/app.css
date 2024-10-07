@@ -1,0 +1,30 @@
+Screen {
+    layout: horizontal;
+}
+
+#center-pane {
+  height: 100%;
+  width: 1fr;
+  background: $background;
+  border: round green;
+}
+
+#topics-table{
+  border: round green;
+  margin: 0 0 1 0;
+  width: 1fr;
+  height: 95%;
+}
+
+#sidebar{
+  dock: left;
+  width: 20;
+  height: 100%;
+  background: $background;
+  border: round green;
+}
+
+Input{
+  border: round green;
+  background: $background;
+}

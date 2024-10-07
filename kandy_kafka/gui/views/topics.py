@@ -1,10 +1,5 @@
-from kandy_kafka.domain.models import Topic
-
-import re
-
 from textual.containers import Horizontal, Vertical, Container
 from textual.reactive import reactive
-from textual import events
 from textual.app import ComposeResult
 from textual.widgets import (
     Label,
@@ -13,59 +8,95 @@ from textual.widgets import (
     Input,
     DataTable,
 )
+from kandy_kafka.domain.models import Topic
+
+import re
 
 
-class TopicsView(Container):
-    """View to display topics in a table."""
+class TableBuilder:
+    """Class responsible for building, updating, and sorting the topics DataTable."""
 
-    BINDINGS = [
-        ("s", "sort_by_size", "Sort By Size"),
-        ("p", "sort_by_partitions", "Sort By Partitions"),
-    ]
-
-    def __init__(self):
-        super().__init__()
-        self.table = DataTable(id="topics-table")
-        self.topics = []  # Store all topics
-        self.filtered_topics = reactive([])
+    def __init__(self, table: DataTable):
+        self.table = table
+        # Dictionary to store sorting directions for each column
+        self.sort_directions = {
+            "Number of messages": False,  # False = Ascending, True = Descending
+            "Partitions": False,
+        }
 
     def build_table(self):
-        """Build the DataTable for topics"""
+        """Build the DataTable for topics."""
         self.table.clear()
-
-        topics_table = self.query_one("#topics-table", DataTable)
-        topics_table.cursor_type = "row"
-        topics_table.zebra_stripes = True
+        self.table.cursor_type = "row"
+        self.table.zebra_stripes = True
 
         for col in (
             "Topic name",
             "Partitions",
             "Replication Factor",
             "Number of messages",
-            "Size",
         ):
-            topics_table.add_column(col, key=col)
+            self.table.add_column(col, key=col)
 
     def update_table(self, topics: list[Topic]):
         """Update the table with the provided list of topics."""
         self.table.clear()
-        topics_table = self.query_one("#topics-table", DataTable)
 
         for topic in topics:
-            topics_table.add_row(
-                topic.name, len(topic.partitions), 1, topic.amount_of_messages, 0
+            self.table.add_row(
+                topic.name,
+                len(topic.partitions),
+                1,  # Hardcoded Replication Factor, until I find a way to fetch this info from kafka
+                topic.amount_of_messages,
             )
 
-    def show_topics(self, topics: list[Topic]):
-        """Show the given list of topics in the table."""
-        self.topics = topics  # Store the topics for filtering
-        self.filtered_topics = (
-            topics  # Initially, filtered topics is the same as topics
-        )
-        self.update_table(self.filtered_topics)
+    def toggle_sort_direction(self, column: str) -> bool:
+        """Toggle the sort direction for the given column."""
+        # Flip the sort direction and store it
+        self.sort_directions[column] = not self.sort_directions[column]
+        return self.sort_directions[column]
+
+    def get_sort_key(self, column: str):
+        """Return the appropriate key function for sorting based on the column."""
+        if column == "Number of messages":
+            return lambda topic: topic.amount_of_messages
+        elif column == "Partitions":
+            return lambda topic: len(topic.partitions)
+        return lambda topic: topic.name  # Default to sorting by topic name
+
+    def sort_table(self, topics: list[Topic], column: str) -> list[Topic]:
+        """Sort the topics list by the specified column."""
+        reverse = self.toggle_sort_direction(column)
+        key_func = self.get_sort_key(column)
+        return sorted(topics, key=key_func, reverse=reverse)
+
+
+class SearchHandler:
+    """Class responsible for filtering topics based on search queries."""
+
+    @staticmethod
+    def filter_topics(topics: list[Topic], query: str) -> list[Topic]:
+        """Filter the list of topics based on the search query."""
+        if not query:
+            return topics
+        query = query.strip()
+        return [
+            topic for topic in topics if re.search(query, topic.name, re.IGNORECASE)
+        ]
+
+
+class TopicsView(Container):
+    """Main view to display topics in a table with search and sorting."""
+
+    def __init__(self):
+        super().__init__()
+        self.table = DataTable(id="topics-table")
+        self.topics = []  # Store all topics
+        self.filtered_topics = reactive([])  # Reactive field for filtered topics
+        self.table_builder = TableBuilder(self.table)  # Initialize TableBuilder
 
     def compose(self) -> ComposeResult:
-        """Compose the view with the table."""
+        """Compose the view with the table, search, and navigation."""
         yield Horizontal(
             Vertical(
                 ListView(
@@ -73,7 +104,7 @@ class TopicsView(Container):
                     ListItem(Label("Topics")),
                     ListItem(Label("Consumers")),
                 ),
-                id="navigation-pane",
+                id="sidebar",
             ),
             Vertical(
                 Input(placeholder="Search Topics...", id="search-field"),
@@ -82,47 +113,33 @@ class TopicsView(Container):
             ),
         )
 
-    current_sorts: set = set()
-
-    def sort_reverse(self, sort_type: str):
-        """Determine if `sort_type` is ascending or descending."""
-        reverse = sort_type in self.current_sorts
-        if reverse:
-            self.current_sorts.remove(sort_type)
-        else:
-            self.current_sorts.add(sort_type)
-        return reverse
-
     async def on_mount(self):
-        self.build_table()
+        """Called when app is mounted, build the initial table."""
+        self.table_builder.build_table()
+        self.table.border_title = "Topics"
 
-    def action_sort_by_size(self) -> None:
-        table = self.query_one(DataTable)
-        table.sort(
-            "Size",
-            key=lambda x: x,
-            reverse=self.sort_reverse("Size"),
+    def show_topics(self, topics: list[Topic]):
+        """Show the given list of topics in the table."""
+        self.topics = topics  # Store the topics for later filtering
+        self.filtered_topics = topics  # Initially, filtered topics = all topics
+        self.table_builder.update_table(self.filtered_topics)
+
+    def action_sort_by_messages(self) -> None:
+        """Sort the table by the size column."""
+        self.filtered_topics = self.table_builder.sort_table(
+            self.filtered_topics, "Size"  # pyright: ignore[reportArgumentType]
         )
+        self.table_builder.update_table(self.filtered_topics)
 
     def action_sort_by_partitions(self) -> None:
-        table = self.query_one(DataTable)
-        table.sort(
-            "Partitions", key=lambda x: int(x), reverse=self.sort_reverse("Partitions")
+        """Sort the table by the number of partitions."""
+        self.filtered_topics = self.table_builder.sort_table(
+            self.filtered_topics, "Partitions"  # pyright: ignore[reportArgumentType]
         )
+        self.table_builder.update_table(self.filtered_topics)
 
     async def on_input_changed(self, event):
         """Called whenever the input in the search field changes."""
         search_query = event.value.strip()
-
-        if search_query == "":
-            # If the search query is empty, show all topics
-            self.filtered_topics = self.topics
-        else:
-            # Use regex to filter topics based on search query
-            self.filtered_topics = [
-                topic
-                for topic in self.topics
-                if re.search(search_query, topic.name, re.IGNORECASE)
-            ]
-
-        self.update_table(self.filtered_topics)
+        self.filtered_topics = SearchHandler.filter_topics(self.topics, search_query)
+        self.table_builder.update_table(self.filtered_topics)

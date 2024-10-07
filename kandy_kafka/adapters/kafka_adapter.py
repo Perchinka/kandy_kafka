@@ -56,7 +56,7 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
                 partition = Partition(topic_name=topic.name, id=partition_metadata.id)
                 partitions.append(partition)
 
-                # Getting partition by id
+                # Get partition by id
                 topic_partition = confluent_kafka.TopicPartition(
                     topic.name, partition_metadata.id
                 )

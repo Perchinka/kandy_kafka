@@ -14,7 +14,7 @@ class Controller(App):
     """Main application controller"""
 
     BINDINGS = [("ctrl+r", "reload", "reload")]
-    CSS_PATH = "app.tcss"  # Textual CSS file for styling
+    CSS_PATH = "app.css"  # Textual CSS file for styling
 
     def __init__(self, bootstraped: Bootstraped):
         super().__init__()
