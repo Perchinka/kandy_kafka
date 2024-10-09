@@ -13,11 +13,12 @@ from kandy_kafka.domain.models import Topic
 import re
 
 
-class TableBuilder:
-    """Class responsible for building, updating, and sorting the topics DataTable."""
+class TopicsDataTable(DataTable):
+    BINDINGS = [("m", "sort('messages')", "Sort by messages")]
 
-    def __init__(self, table: DataTable):
-        self.table = table
+    def __init__(self, id: str):
+        super().__init__(id=id)
+
         # Dictionary to store sorting directions for each column
         self.sort_directions = {
             "Number of messages": False,  # False = Ascending, True = Descending
@@ -26,9 +27,9 @@ class TableBuilder:
 
     def build_table(self):
         """Build the DataTable for topics."""
-        self.table.clear()
-        self.table.cursor_type = "row"
-        self.table.zebra_stripes = True
+        self.clear()
+        self.cursor_type = "row"
+        self.zebra_stripes = True
 
         for col in (
             "Topic name",
@@ -36,14 +37,14 @@ class TableBuilder:
             "Replication Factor",
             "Number of messages",
         ):
-            self.table.add_column(col, key=col)
+            self.add_column(col, key=col)
 
     def update_table(self, topics: list[Topic]):
         """Update the table with the provided list of topics."""
-        self.table.clear()
+        self.clear()
 
         for topic in topics:
-            self.table.add_row(
+            self.add_row(
                 topic.name,
                 len(topic.partitions),
                 1,  # Hardcoded Replication Factor, until I find a way to fetch this info from kafka
@@ -90,10 +91,10 @@ class TopicsView(Container):
 
     def __init__(self):
         super().__init__()
-        self.table = DataTable(id="topics-table")
+        self.topics_table = TopicsDataTable(id="topics-table")
+        self.messages_table = DataTable(id="messages-table")
         self.topics = []  # Store all topics
         self.filtered_topics = reactive([])  # Reactive field for filtered topics
-        self.table_builder = TableBuilder(self.table)  # Initialize TableBuilder
 
     def compose(self) -> ComposeResult:
         """Compose the view with the table, search, and navigation."""
@@ -108,39 +109,42 @@ class TopicsView(Container):
             ),
             Vertical(
                 Input(placeholder="Search Topics...", id="search-field"),
-                self.table,
+                Horizontal(
+                    self.topics_table,
+                    self.messages_table,
+                ),
                 id="center-pane",
             ),
         )
 
     async def on_mount(self):
         """Called when app is mounted, build the initial table."""
-        self.table_builder.build_table()
-        self.table.border_title = "Topics"
-        self.table.focus()
+        self.topics_table.build_table()
+        self.topics_table.border_title = "Topics"
+        self.topics_table.focus()
 
     def show_topics(self, topics: list[Topic]):
         """Show the given list of topics in the table."""
         self.topics = topics  # Store the topics for later filtering
         self.filtered_topics = topics  # Initially, filtered topics = all topics
-        self.table_builder.update_table(self.filtered_topics)
+        self.topics_table.update_table(self.filtered_topics)
 
     def action_sort_by_messages(self) -> None:
         """Sort the table by the size column."""
-        self.filtered_topics = self.table_builder.sort_table(
+        self.filtered_topics = self.topics_table.sort_table(
             self.filtered_topics, "Size"  # pyright: ignore[reportArgumentType]
         )
-        self.table_builder.update_table(self.filtered_topics)
+        self.topics_table.update_table(self.filtered_topics)
 
     def action_sort_by_partitions(self) -> None:
         """Sort the table by the number of partitions."""
-        self.filtered_topics = self.table_builder.sort_table(
+        self.filtered_topics = self.topics_table.sort_table(
             self.filtered_topics, "Partitions"  # pyright: ignore[reportArgumentType]
         )
-        self.table_builder.update_table(self.filtered_topics)
+        self.topics_table.update_table(self.filtered_topics)
 
     async def on_input_changed(self, event):
         """Called whenever the input in the search field changes."""
         search_query = event.value.strip()
         self.filtered_topics = SearchHandler.filter_topics(self.topics, search_query)
-        self.table_builder.update_table(self.filtered_topics)
+        self.topics_table.update_table(self.filtered_topics)
