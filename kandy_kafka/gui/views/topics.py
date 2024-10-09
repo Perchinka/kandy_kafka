@@ -117,6 +117,7 @@ class TopicsView(Container):
         """Called when app is mounted, build the initial table."""
         self.table_builder.build_table()
         self.table.border_title = "Topics"
+        self.table.focus()
 
     def show_topics(self, topics: list[Topic]):
         """Show the given list of topics in the table."""
