@@ -14,14 +14,17 @@ class Controller(App):
     """Main application controller"""
 
     BINDINGS = [
-        ("ctrl+l", "focus_next"),
+        (
+            "h",
+            "focus_previous",
+        ),  # TODO solve problem with search field. Probably instead of fixed search field it's better to use ctrl-F pop-up
+        ("l", "focus_next"),
     ]
     CSS_PATH = "app.css"  # Textual CSS file for styling
 
     def __init__(self, bootstraped: Bootstraped):
         super().__init__()
         self.view = TopicsView(bootstraped)  # Instantiate the TopicsView from views.py
-        self.bind("ctrl+j", "focus_previous")
 
     async def reload_topics(self):
         self.view.load_topics()  # Update the table in the view
