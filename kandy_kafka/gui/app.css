@@ -14,6 +14,11 @@ Screen {
   margin: 0 0 1 0;
   width: 1fr;
   height: 95%;
+  opacity: 90%;
+}
+
+#topics-table:focus{
+opacity: 100%;
 }
 
 #messages-table{
@@ -21,6 +26,11 @@ Screen {
   margin: 0 0 1 0;
   width: 1fr;
   height: 95%;
+  opacity: 90%;
+}
+
+#messages-table:focus{
+opacity: 100%;
 }
 
 #sidebar{
@@ -29,9 +39,19 @@ Screen {
   height: 100%;
   background: $background;
   border: round green;
+  opacity: 80%;
+}
+
+#sidebar:focus{
+opacity: 100%;
 }
 
 Input{
   border: round green;
   background: $background;
+  opacity: 90%;
+}
+
+Input:focus{
+  opacity: 100%;
 }
