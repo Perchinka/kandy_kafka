@@ -1,4 +1,4 @@
-FROM confluentinc/cp-kafka:latest
+FROM confluentinc/cp-kafka:7.7.1
 
 WORKDIR /app
 
