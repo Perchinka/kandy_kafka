@@ -1,22 +1,21 @@
 from abc import ABC, abstractmethod
 import logging
 import confluent_kafka
-from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka.admin import AdminClient, TopicDescription
 from confluent_kafka import (
     Consumer,
     KafkaException,
     KafkaError,
     Message,
-    Producer,
-    TopicPartition,
+    TopicCollection,
 )
-import sys
 from typing import List
+from kandy_kafka.domain.models import Topic, Partition, Message
 
 
 class AbstractKafkaClusterAdapter(ABC):
     @abstractmethod
-    def get_topics(self) -> List[str]:
+    def get_topics(self) -> List[Topic]:
         raise NotImplementedError
 
     @abstractmethod
@@ -41,13 +40,46 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             partition.offset = confluent_kafka.OFFSET_BEGINNING
         consumer.assign(partitions)
 
-    def get_topics(self) -> List[str]:
-        topics = self.admin_client.list_topics(timeout=10).topics
+    def get_topics(self) -> List[Topic]:
+        metadata = self.admin_client.list_topics(timeout=10)
+        topics = self.admin_client.describe_topics(
+            TopicCollection(list(metadata.topics))
+        )
 
-        return list(topics)
+        result = []
+        for _, feature in topics.items():
+            topic: TopicDescription = feature.result()
+            total_messages = 0
+
+            partitions: List[Partition] = []
+            for partition_metadata in topic.partitions:
+                partition = Partition(topic_name=topic.name, id=partition_metadata.id)
+                partitions.append(partition)
+
+                # Get partition by id
+                topic_partition = confluent_kafka.TopicPartition(
+                    topic.name, partition_metadata.id
+                )
+
+                # Amount_of_messages in the topic = the latest offset - the earliest one
+                low, high = self.consumer.get_watermark_offsets(topic_partition)
+                partition_message_count = high - low
+                total_messages += partition_message_count
+
+            result.append(
+                Topic(
+                    id=topic.topic_id,
+                    name=topic.name,
+                    is_internal=topic.is_internal,
+                    partitions=partitions,
+                    amount_of_messages=total_messages,
+                )
+            )
+
+        return result
 
     def get_messages(self, topic: str) -> List[str]:
-        # TODO Add "from offset" param, or mb something like "pagenumber"
+        # TODO Add "from offset" parameter and pool not 50 first messages, but 50 from specified offset
         metadata = self.consumer.list_topics(topic, timeout=10)
         if metadata.topics[topic].error is not None:
             raise KafkaException(metadata.topics[topic].error)

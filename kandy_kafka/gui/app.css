@@ -1,0 +1,57 @@
+Screen {
+    layout: horizontal;
+}
+
+#center-pane {
+  height: 100%;
+  width: 1fr;
+  background: $background;
+  border: round green;
+}
+
+#topics-table{
+  border: round green;
+  margin: 0 0 1 0;
+  width: 1fr;
+  height: 95%;
+  opacity: 90%;
+}
+
+#topics-table:focus{
+opacity: 100%;
+}
+
+#messages-table{
+  border: round green;
+  margin: 0 0 1 0;
+  width: 1fr;
+  height: 95%;
+  opacity: 90%;
+}
+
+#messages-table:focus{
+opacity: 100%;
+}
+
+#sidebar{
+  dock: left;
+  width: 20;
+  height: 100%;
+  background: $background;
+  border: round green;
+  opacity: 80%;
+}
+
+#sidebar:focus{
+opacity: 100%;
+}
+
+Input{
+  border: round green;
+  background: $background;
+  opacity: 90%;
+}
+
+Input:focus{
+  opacity: 100%;
+}

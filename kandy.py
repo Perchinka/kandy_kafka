@@ -1,6 +1,8 @@
 from kandy_kafka.bootstrap import Bootstrap
 import argparse
 
+from kandy_kafka.gui.controller import Controller
+
 
 class ConditionalAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
