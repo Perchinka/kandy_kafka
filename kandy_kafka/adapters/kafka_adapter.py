@@ -10,7 +10,7 @@ from confluent_kafka import (
     TopicCollection,
 )
 from typing import List
-from kandy_kafka.domain.models import Topic, Partition, Message
+from kandy_kafka.domain.models import Topic, Partition
 
 
 class AbstractKafkaClusterAdapter(ABC):
