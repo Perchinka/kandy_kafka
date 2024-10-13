@@ -1,7 +1,6 @@
 import pytest
 from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
-from confluent_kafka.admin import AdminClient, NewTopic
-from confluent_kafka import Consumer, Message, Producer
+from confluent_kafka import Message
 
 from kandy_kafka.domain.models import Topic
 

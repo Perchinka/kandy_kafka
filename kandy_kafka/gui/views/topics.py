@@ -5,7 +5,6 @@ if TYPE_CHECKING:
     from kandy_kafka.bootstrap import Bootstraped
 
 from textual.containers import Horizontal, Vertical, Container
-from textual.reactive import reactive
 from textual.app import ComposeResult
 from textual.widgets import (
     Label,
@@ -13,7 +12,6 @@ from textual.widgets import (
     ListView,
     Input,
     DataTable,
-    LoadingIndicator,
 )
 from kandy_kafka.domain.models import Topic
 
@@ -24,8 +22,8 @@ from typing import List
 class BaseTable(DataTable):
     BINDINGS = [("j", "cursor_down"), ("k", "cursor_up")]  # Vim bindings
 
-    def __init__(self, id: str):
-        super().__init__(id=id)
+    def __init__(self, css_id: str):
+        super().__init__(id=css_id)
         # Dictionary to store sorting directions for each column
         self.sort_directions = {}
 
