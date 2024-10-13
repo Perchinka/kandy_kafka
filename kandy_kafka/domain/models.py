@@ -19,5 +19,5 @@ class Topic(BaseModel):
         arbitrary_types_allowed = True
 
 
-class Message(BaseModel):
+class KafkaMessage(BaseModel):
     pass
