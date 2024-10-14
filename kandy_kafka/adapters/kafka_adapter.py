@@ -10,7 +10,7 @@ from confluent_kafka import (
     TopicCollection,
 )
 from typing import List
-from kandy_kafka.domain.models import Topic, Partition
+from kandy_kafka.domain.models import KafkaMessage, Topic, Partition
 
 
 class AbstractKafkaClusterAdapter(ABC):
@@ -19,7 +19,7 @@ class AbstractKafkaClusterAdapter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_messages(self, topic: str) -> List[str]:
+    def get_messages(self, topic_name: str) -> List[KafkaMessage]:
         raise NotImplementedError
 
 
@@ -78,21 +78,20 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
 
         return result
 
-    def get_messages(self, topic: str) -> List[str]:
+    def get_messages(self, topic_name: str) -> List[KafkaMessage]:
         # TODO Add "from offset" parameter and pool not 50 first messages, but 50 from specified offset
-        metadata = self.consumer.list_topics(topic, timeout=10)
-        if metadata.topics[topic].error is not None:
-            raise KafkaException(metadata.topics[topic].error)
+        metadata = self.consumer.list_topics(topic_name, timeout=10)
+        if metadata.topics[topic_name].error is not None:
+            raise KafkaException(metadata.topics[topic_name].error)
 
         running = True
 
         messages: List[Message] = []
 
-        self.consumer.subscribe([topic], on_assign=self.on_assign)
+        self.consumer.subscribe([topic_name], on_assign=self.on_assign)
         while running:
             # Timeout isn't reliable though. # TODO Find a better way to handle connection
             msg = self.consumer.poll(timeout=10)
-            # TODO change 50 to custom config param, smth like messages per page
             if msg is None or len(messages) >= 50:
                 running = False
                 continue
@@ -102,7 +101,17 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
                 else:
                     logging.error(f"Error: {msg.error()}")
                     break
-            messages.append(msg)
+
+            messages.append(
+                KafkaMessage(
+                    topic=topic_name,
+                    offset=msg.offset(),
+                    partition_id=msg.partition(),
+                    headers=msg.headers(),
+                    value=msg.value(),
+                    key=msg.key(),
+                )
+            )
             self.consumer.commit()
 
         self.consumer.close()

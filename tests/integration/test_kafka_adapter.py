@@ -1,8 +1,7 @@
 import pytest
 from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
-from confluent_kafka import Message
 
-from kandy_kafka.domain.models import Topic
+from kandy_kafka.domain.models import KafkaMessage, Topic
 
 
 @pytest.fixture
@@ -25,11 +24,11 @@ def test_should_return_10_messages_from_topic(kafka_adapter):
     messages = kafka_adapter.get_messages("test1")
     assert isinstance(messages, list)
     assert len(messages) == 10
-    assert all(isinstance(message, Message) for message in messages)
+    assert all(isinstance(message, KafkaMessage) for message in messages)
 
 
 def test_should_return_50_messages_from_topic_with_100_messages(kafka_adapter):
     messages = kafka_adapter.get_messages("test2")
     assert isinstance(messages, list)
     assert len(messages) == 50
-    assert all(isinstance(message, Message) for message in messages)
+    assert all(isinstance(message, KafkaMessage) for message in messages)

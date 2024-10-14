@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional, Tuple
 from confluent_kafka import Uuid
 from pydantic import BaseModel
 
@@ -20,4 +21,10 @@ class Topic(BaseModel):
 
 
 class KafkaMessage(BaseModel):
-    pass
+    topic: str
+    offset: int
+    partition_id: int
+    # timestamp: datetime
+    headers: Optional[List[Tuple[str, bytes]]] = None
+    value: Optional[bytes] = None
+    key: Optional[bytes] = None
