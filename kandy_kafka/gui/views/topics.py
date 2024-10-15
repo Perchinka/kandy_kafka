@@ -1,9 +1,11 @@
 from __future__ import annotations
+import logging
 from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     from kandy_kafka.bootstrap import Bootstraped
 
+from textual import message, messages, on, work
 from textual.containers import Horizontal, Vertical, Container
 from textual.app import ComposeResult
 from textual.widgets import (
@@ -13,7 +15,7 @@ from textual.widgets import (
     Input,
     DataTable,
 )
-from kandy_kafka.domain.models import Topic
+from kandy_kafka.domain.models import KafkaMessage, Topic
 
 import re
 from typing import List
@@ -75,6 +77,22 @@ class MessagesTable(BaseTable):
         )
         self.border_title = "Messages"
 
+    def update_messages(self, messages: List[KafkaMessage]):
+        """Update the table with the provided list of topics."""
+        rows = []
+        for message in messages:
+            rows.append(
+                [
+                    message.offset,
+                    message.partition_id,
+                    None,
+                    message.key,
+                    message.value,
+                ]
+            )
+
+        self.update_rows(rows)
+
 
 class TopicsTable(BaseTable):
     def __init__(self) -> None:
@@ -91,7 +109,7 @@ class TopicsTable(BaseTable):
         )
         self.border_title = "Topics"
 
-    def update_topics_in_table(self, topics: List[Topic]):
+    def update_topics(self, topics: List[Topic]):
         """Update the table with the provided list of topics."""
         rows = []
         for topic in topics:
@@ -128,6 +146,8 @@ class TopicsView(Container):
         self.topics_table = TopicsTable()
         self.messages_table = MessagesTable()
 
+        self.topics = []
+
     def compose(self) -> ComposeResult:
         yield Horizontal(
             Vertical(
@@ -154,17 +174,31 @@ class TopicsView(Container):
         self.load_topics()
 
     def load_topics(self):
-        self.topics_table.loading = True
         topics = self.kafka_adapter.get_topics()
+        # TODO separate filtering logic
         self.topics = topics  # Store the topics for later filtering
-        self.topics_table.update_topics_in_table(self.topics)
+        self.topics_table.update_topics(self.topics)
         self.topics_table.loading = False
+
+    @work(thread=True)
+    async def load_messages(self, topic_name):
+        logging.info("Loading messages")
+        messages = self.kafka_adapter.get_messages(topic_name)
+        logging.info("Got messages")
+        self.messages_table.update_messages(messages)
+        self.messages_table.loading = False
 
     async def on_input_changed(self, event):
         """Called whenever the input in the search field changes."""
         search_query = event.value.strip()
         filtered_topics = SearchHandler.filter_topics(self.topics, search_query)
-        self.topics_table.update_topics_in_table(filtered_topics)
+        self.topics_table.update_topics(filtered_topics)
+
+    @on(DataTable.RowSelected, "#topics-table")
+    def handle_row_selected(self, message: DataTable.RowSelected):
+        self.messages_table.loading = True
+        topic_name = message.data_table.get_cell(message.row_key, "name")
+        self.load_messages(topic_name)
 
     # Actions
     def action_reload(self):

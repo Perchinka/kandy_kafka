@@ -11,6 +11,7 @@ from confluent_kafka import (
 )
 from typing import List
 from kandy_kafka.domain.models import KafkaMessage, Topic, Partition
+import asyncio
 
 
 class AbstractKafkaClusterAdapter(ABC):
@@ -33,12 +34,6 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
                 "auto.offset.reset": "earliest",
             }
         )
-
-    @staticmethod
-    def on_assign(consumer: Consumer, partitions):
-        for partition in partitions:
-            partition.offset = confluent_kafka.OFFSET_BEGINNING
-        consumer.assign(partitions)
 
     def get_topics(self) -> List[Topic]:
         metadata = self.admin_client.list_topics(timeout=10)
@@ -80,19 +75,24 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
 
     def get_messages(self, topic_name: str) -> List[KafkaMessage]:
         # TODO Add "from offset" parameter and pool not 50 first messages, but 50 from specified offset
-        metadata = self.consumer.list_topics(topic_name, timeout=10)
-        if metadata.topics[topic_name].error is not None:
-            raise KafkaException(metadata.topics[topic_name].error)
-
         running = True
 
         messages: List[Message] = []
 
-        self.consumer.subscribe([topic_name], on_assign=self.on_assign)
+        def on_assign(consumer: Consumer, partitions):
+            for partition in partitions:
+                partition.offset = confluent_kafka.OFFSET_BEGINNING
+            consumer.assign(partitions)
+
+        logging.info("Start polling messages")
+        self.consumer.subscribe([topic_name], on_assign=on_assign)
         while running:
             # Timeout isn't reliable though. # TODO Find a better way to handle connection
             msg = self.consumer.poll(timeout=10)
-            if msg is None or len(messages) >= 50:
+            if msg is None:
+                running = False
+                continue
+            if len(messages) >= 10:
                 running = False
                 continue
             if msg.error():
@@ -114,10 +114,11 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             )
             self.consumer.commit()
 
-        self.consumer.close()
+        # self.consumer.close()
+        logging.info("End polling messages")
         return messages
 
-    # def create_topics(self, topics: List[str]):
+    # async def create_topics(self, topics: List[str]):
     #     """Create topics"""
     #
     #     new_topics = [
