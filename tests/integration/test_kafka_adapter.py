@@ -133,8 +133,8 @@ def test_should_return_50_messages_from_topic_with_100_messages(
     [
         (
             random.randint(1, 5),
-            random.randint(1, 100),
-            random.randint(1, 10),
+            random.randint(51, 100),
+            random.randint(1, 50),
         ),
     ],
 )
