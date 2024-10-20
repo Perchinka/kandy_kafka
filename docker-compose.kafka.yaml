@@ -27,31 +27,6 @@ services:
       - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
 
-  init-kafka:
-    build: .
-    # image: confluentinc/cp-kafka
-    depends_on:
-      kafka:
-        condition: service_healthy
-    # entrypoint: ["/bin/sh", "-c"]
-    # command: |
-    #   "
-    #   kafka-topics --bootstrap-server kafka:9092 --list
-    #   echo -e 'Creating kafka topics'
-    #   kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test --replication-factor 1 --partitions 1
-    #   kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test2 --replication-factor 1 --partitions 1
-    #   kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test3 --replication-factor 1 --partitions 1
-    #   echo "askdl" >> /tmp/healthy
-    #   sleep 10 
-    #   # Fix this later. Replace sleep with sort of check
-    #   "
-
-    healthcheck:
-      test: ["CMD", "test", "-f", "/tmp/healthy"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest

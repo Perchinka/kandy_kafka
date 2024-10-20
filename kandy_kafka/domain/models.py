@@ -16,8 +16,7 @@ class Topic(BaseModel):
     partitions: List[Partition]
     amount_of_messages: int
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class KafkaMessage(BaseModel):
