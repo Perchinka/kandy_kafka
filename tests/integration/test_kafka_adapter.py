@@ -9,6 +9,7 @@ def kafka_adapter(server):
     """Instantiate a KafkaAdapter object and return it as a fixture"""
     adapter = KafkaAdapter(server.HOST, server.PORT)
     yield adapter
+    adapter.consumer.close()
 
 
 def test_should_return_topic_list(kafka_adapter):
@@ -20,7 +21,7 @@ def test_should_return_topic_list(kafka_adapter):
     )
 
 
-def test_should_return_10_messages_from_topic(kafka_adapter):
+def test_should_return_10_messages_from_topic_with_10_messages(kafka_adapter):
     messages = kafka_adapter.get_messages("test1")
     assert isinstance(messages, list)
     assert len(messages) == 10

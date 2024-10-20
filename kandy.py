@@ -1,4 +1,4 @@
-from kandy_kafka.bootstrap import Bootstrap
+from kandy_kafka.bootstrap import Bootstrap, Bootstraped
 import argparse
 
 
@@ -28,7 +28,11 @@ def main():
             "If clustername is not specified, both --host and --port must be provided"
         )
 
-    Bootstrap()(clustername=args.clustername, host=args.host, port=args.port)
+    bootstraped = Bootstrap()(
+        clustername=args.clustername, host=args.host, port=args.port
+    )
+
+    bootstraped.kafka_adapter.consumer.close()
 
 
 if __name__ == "__main__":

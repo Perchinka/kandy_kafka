@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Tuple
 if TYPE_CHECKING:
     from kandy_kafka.bootstrap import Bootstraped
 
-from textual import message, messages, on, work
+from textual import on, work
 from textual.containers import Horizontal, Vertical, Container
 from textual.app import ComposeResult
 from textual.widgets import (
@@ -22,7 +22,12 @@ from typing import List
 
 
 class BaseTable(DataTable):
-    BINDINGS = [("j", "cursor_down"), ("k", "cursor_up")]  # Vim bindings
+    BINDINGS = [
+        ("j", "cursor_down"),
+        ("k", "cursor_up"),
+        ("G", "scroll_bottom"),
+        ("g", "scroll_top"),
+    ]  # Vim bindings
 
     def __init__(self, css_id: str):
         super().__init__(id=css_id)

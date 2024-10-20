@@ -4,14 +4,13 @@ import confluent_kafka
 from confluent_kafka.admin import AdminClient, TopicDescription
 from confluent_kafka import (
     Consumer,
-    KafkaException,
     KafkaError,
     Message,
     TopicCollection,
+    TopicPartition,
 )
 from typing import List
 from kandy_kafka.domain.models import KafkaMessage, Topic, Partition
-import asyncio
 
 
 class AbstractKafkaClusterAdapter(ABC):
@@ -74,34 +73,62 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
         return result
 
     def get_messages(self, topic_name: str) -> List[KafkaMessage]:
-        # TODO Add "from offset" parameter and pool not 50 first messages, but 50 from specified offset
         running = True
 
         messages: List[Message] = []
 
-        def on_assign(consumer: Consumer, partitions):
+        def on_assign(consumer: Consumer, partitions: List[TopicPartition]):
             for partition in partitions:
                 partition.offset = confluent_kafka.OFFSET_BEGINNING
             consumer.assign(partitions)
 
         logging.info("Start polling messages")
         self.consumer.subscribe([topic_name], on_assign=on_assign)
-        while running:
-            # Timeout isn't reliable though. # TODO Find a better way to handle connection
-            msg = self.consumer.poll(timeout=10)
-            if msg is None:
-                running = False
-                continue
-            if len(messages) >= 10:
-                running = False
-                continue
-            if msg.error():
-                if msg.error().code() == KafkaError._PARTITION_EOF:
-                    continue
-                else:
-                    logging.error(f"Error: {msg.error()}")
-                    break
 
+        # Get the number of partitions for this topic
+        topic_partitions = (
+            self.admin_client.list_topics(timeout=10).topics[topic_name].partitions
+        )
+        partition_offsets = {
+            partition: {"low": None, "high": None, "current": 0}
+            for partition in topic_partitions
+        }
+
+        # Fetch watermark offsets for each partition to know where to stop
+        for partition_id in partition_offsets.keys():
+            tp = confluent_kafka.TopicPartition(topic_name, partition_id)
+            low, high = self.consumer.get_watermark_offsets(tp)
+            partition_offsets[partition_id]["low"] = low
+            partition_offsets[partition_id]["high"] = high
+            logging.info(f"Partition {partition_id}: Low: {low}, High: {high}")
+
+        while running:
+            msg = self.consumer.poll(timeout=1)
+
+            if msg is None:
+                # If no message is returned, check if all partitions have been fully consumed
+                all_done = all(
+                    (
+                        partition_offsets[partition]["current"]
+                        >= partition_offsets[partition]["high"] - 1
+                    )
+                    for partition in partition_offsets
+                )
+                if all_done:
+                    logging.info("All partitions have been fully consumed. Stopping.")
+                    running = False
+                continue
+
+            if msg.error() and msg.error().code() != KafkaError._NO_ERROR:
+                # Log errors but continue to consume from other partitions
+                logging.error(f"Kafka error: {msg.error()}")
+                continue
+
+            # Record the current offset for the partition
+            partition_id = msg.partition()
+            partition_offsets[partition_id]["current"] = msg.offset()
+
+            # Collect the message
             messages.append(
                 KafkaMessage(
                     topic=topic_name,
@@ -112,10 +139,18 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
                     key=msg.key(),
                 )
             )
-            self.consumer.commit()
 
-        # self.consumer.close()
-        logging.info("End polling messages")
+            logging.info(
+                f"Message consumed from partition {partition_id}: offset {msg.offset()}"
+            )
+
+            # Optionally, stop after consuming a certain number of messages
+            if len(messages) >= 50:
+                logging.info("Reached limit of 50 messages. Stopping.")
+                running = False
+                continue
+
+        logging.info("End polling messages for topic: %s", topic_name)
         return messages
 
     # async def create_topics(self, topics: List[str]):
