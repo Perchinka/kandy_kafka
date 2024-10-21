@@ -14,37 +14,82 @@ from kandy_kafka.domain.models import KafkaMessage, Topic, Partition
 
 
 class AbstractKafkaClusterAdapter(ABC):
+    """
+    Abstract base class for Kafka cluster adapters.
+
+    Defines the interface for interacting with a Kafka cluster, including fetching topics
+    and retrieving messages from a given topic.
+    """
+
     @abstractmethod
     def get_topics(self) -> List[Topic]:
+        """
+        Retrieve a list of topics in the Kafka cluster.
+
+        Returns:
+            List[Topic]: A list of Topic objects representing the available topics in the cluster.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def get_messages(self, topic_name: str) -> List[KafkaMessage]:
+        """
+        Retrieve messages from a specified Kafka topic.
+
+        Args:
+            topic_name (str): The name of the Kafka topic to fetch messages from.
+
+        Returns:
+            List[KafkaMessage]: A list of KafkaMessage objects representing the retrieved messages.
+        """
         raise NotImplementedError
 
 
 class KafkaAdapter(AbstractKafkaClusterAdapter):
+    """
+    Kafka adapter that implements the methods to interact with a Kafka cluster using confluent-kafka library.
+    """
+
     def __init__(self, host: str, port: int):
+        """
+        Initializes the Kafka adapter with the given host and port.
+
+        Args:
+            host (str): The hostname or IP address of the Kafka broker.
+            port (int): The port number of the Kafka broker.
+        """
         self.admin_client = AdminClient({"bootstrap.servers": f"{host}:{port}"})
         self.consumer: Consumer = Consumer(
             {
                 "bootstrap.servers": f"{host}:{port}",
-                "group.id": "kandy",
-                "auto.offset.reset": "earliest",
+                "group.id": "kandy",  # Group ID used to identify the consumer group
+                "auto.offset.reset": "earliest",  # Start reading from the earliest offset (Default setting)
             }
         )
 
     def get_topics(self) -> List[Topic]:
+        """
+        Retrieve a list of topics in the Kafka cluster.
+
+        Returns:
+            List[Topic]: A list of Topic objects, each containing details about the topic and its partitions.
+        """
+
+        # Retrieve metadata for all topics in the Kafka cluster
         metadata = self.admin_client.list_topics(timeout=10)
+
+        # Describe each topic in the collection of topics
         topics = self.admin_client.describe_topics(
             TopicCollection(list(metadata.topics))
         )
 
+        # Iterate over the topics and gather details for each
         result = []
         for _, feature in topics.items():
             topic: TopicDescription = feature.result()
             total_messages = 0
 
+            # Retrieve partition details for the current topic
             partitions: List[Partition] = []
             for partition_metadata in topic.partitions:
                 partition = Partition(topic_name=topic.name, id=partition_metadata.id)
@@ -55,7 +100,7 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
                     topic.name, partition_metadata.id
                 )
 
-                # Amount_of_messages in the topic = the latest offset - the earliest one
+                # Amount_of_messages in the topic is the difference between the latest offset and the earliest one
                 low, high = self.consumer.get_watermark_offsets(topic_partition)
                 partition_message_count = high - low
                 total_messages += partition_message_count
@@ -73,10 +118,19 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
         return result
 
     def get_messages(self, topic_name: str) -> List[KafkaMessage]:
-        running = True
+        """
+        Fetches messages from the specified Kafka topic (from all partitions so far)
 
+        Args:
+            topic_name (str): The name of the Kafka topic to fetch messages from.
+
+        Returns:
+            List[KafkaMessage]: A list of KafkaMessage objects representing the consumed messages.
+        """
+        running = True
         messages: List[Message] = []
 
+        # Callback for handling partition assignment, setting the offset to the beginning
         def on_assign(consumer: Consumer, partitions: List[TopicPartition]):
             for partition in partitions:
                 partition.offset = confluent_kafka.OFFSET_BEGINNING
@@ -89,12 +143,14 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
         topic_partitions = (
             self.admin_client.list_topics(timeout=10).topics[topic_name].partitions
         )
+
+        # Dictionary to track offsets for each partition (Needed to spot the end of the topic)
         partition_offsets = {
             partition: {"low": None, "high": None, "current": 0}
             for partition in topic_partitions
         }
 
-        # Fetch watermark offsets for each partition to know where to stop
+        # Fetch watermark offsets for each partition to find start and end offsets
         for partition_id in partition_offsets.keys():
             tp = confluent_kafka.TopicPartition(topic_name, partition_id)
             low, high = self.consumer.get_watermark_offsets(tp)
@@ -102,11 +158,12 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             partition_offsets[partition_id]["high"] = high
             logging.info("Partition %d: Low: %d, High: %d", partition_id, low, high)
 
+        # Polling cycle
         while running:
-            msg = self.consumer.poll(timeout=1)
+            msg = self.consumer.poll(timeout=0.1)
 
             if msg is None:
-                # If no message is returned, check if all partitions have been fully consumed
+                # Check if all partitions have been fully consumed
                 all_done = all(
                     (
                         partition_offsets[partition]["current"]
@@ -128,7 +185,6 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             partition_id = msg.partition()
             partition_offsets[partition_id]["current"] = msg.offset()
 
-            # Collect the message
             messages.append(
                 KafkaMessage(
                     topic=topic_name,
@@ -146,7 +202,8 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
                 msg.offset(),
             )
 
-            # Optionally, stop after consuming a certain number of messages
+            # Stop after consuming a certain predefined number of messages
+            # TODO replace with variable or config const
             if len(messages) >= 50:
                 logging.info("Reached limit of 50 messages. Stopping.")
                 running = False
