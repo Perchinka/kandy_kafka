@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Tuple
 from confluent_kafka import Uuid
 from pydantic import BaseModel
 
@@ -15,9 +15,14 @@ class Topic(BaseModel):
     partitions: List[Partition]
     amount_of_messages: int
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class KafkaMessage(BaseModel):
-    pass
+    topic: str
+    offset: int
+    partition_id: int
+    # timestamp: datetime
+    headers: Optional[List[Tuple[str, bytes]]] = None
+    value: Optional[bytes] = None
+    key: Optional[bytes] = None
