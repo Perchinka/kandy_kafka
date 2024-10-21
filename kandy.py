@@ -1,4 +1,4 @@
-from kandy_kafka.bootstrap import Bootstrap, Bootstraped
+from kandy_kafka.bootstrap import Bootstrap
 import argparse
 
 

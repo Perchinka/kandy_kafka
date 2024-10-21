@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List, Optional, Tuple
 from confluent_kafka import Uuid
 from pydantic import BaseModel

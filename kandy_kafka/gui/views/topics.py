@@ -1,6 +1,8 @@
 from __future__ import annotations
-import logging
-from typing import TYPE_CHECKING, Tuple
+
+from kandy_kafka.domain.models import KafkaMessage, Topic
+
+from typing import TYPE_CHECKING, Tuple, List
 
 if TYPE_CHECKING:
     from kandy_kafka.bootstrap import Bootstraped
@@ -15,10 +17,9 @@ from textual.widgets import (
     Input,
     DataTable,
 )
-from kandy_kafka.domain.models import KafkaMessage, Topic
 
 import re
-from typing import List
+import logging
 
 
 class BaseTable(DataTable):

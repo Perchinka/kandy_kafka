@@ -100,7 +100,7 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             low, high = self.consumer.get_watermark_offsets(tp)
             partition_offsets[partition_id]["low"] = low
             partition_offsets[partition_id]["high"] = high
-            logging.info(f"Partition {partition_id}: Low: {low}, High: {high}")
+            logging.info("Partition %d: Low: %d, High: %d", partition_id, low, high)
 
         while running:
             msg = self.consumer.poll(timeout=1)
@@ -121,7 +121,7 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
 
             if msg.error() and msg.error().code() != KafkaError._NO_ERROR:
                 # Log errors but continue to consume from other partitions
-                logging.error(f"Kafka error: {msg.error()}")
+                logging.error("Kafka error: %s", msg.error())
                 continue
 
             # Record the current offset for the partition
@@ -141,7 +141,9 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             )
 
             logging.info(
-                f"Message consumed from partition {partition_id}: offset {msg.offset()}"
+                "Message consumed from partition %s: offset: ",
+                partition_id,
+                msg.offset(),
             )
 
             # Optionally, stop after consuming a certain number of messages
