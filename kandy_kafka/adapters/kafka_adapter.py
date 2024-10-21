@@ -141,7 +141,7 @@ class KafkaAdapter(AbstractKafkaClusterAdapter):
             )
 
             logging.info(
-                "Message consumed from partition %s: offset: ",
+                "Message consumed from partition %s: offset: %d",
                 partition_id,
                 msg.offset(),
             )
