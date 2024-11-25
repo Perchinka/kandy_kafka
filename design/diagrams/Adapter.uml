@@ -1,0 +1,24 @@
+classDiagram
+    class KafkaClusterAdapter {
+        <<abstract>>
+        +get_topics() List[Topic]
+        +get_messages(topic_name: str) List[KafkaMessage]
+        +get_consumer_groups() List[KafkaConsumers]
+        +delete_topic(topic_name: str)
+        +configure_cluster(configuration: dict)
+    }
+
+    class SpecificLibraryAdapter{
+      <<interface>>
+      - connection_handler ConnectionType
+    }
+
+    class AnotherLibraryAdapter{
+      <<interface>>
+      - another_handler OtherConnectionType
+      - needed_variable
+      +some_important_function()
+    }
+
+KafkaClusterAdapter <|-- SpecificLibraryAdapter
+KafkaClusterAdapter <|-- AnotherLibraryAdapter

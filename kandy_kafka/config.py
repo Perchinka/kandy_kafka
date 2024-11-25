@@ -1,7 +1,6 @@
 import os
 from kandy_kafka import logger
 from pathlib import Path
-from typing import List
 
 from kandy_kafka.exceptions import HostsFileHasWrongSyntax, HostsFileNotFound
 
@@ -26,8 +25,6 @@ class Config:
     KAFKA_PORT: int
 
     DATA_POLLING_INTERVAL: int  # Time in seconds - how often to poll data from Kafka
-
-    PALETTE: List
 
     def __init__(self, host="localhost", port=29092) -> None:
         """
