@@ -803,8 +803,6 @@ As mentioned earlier, understanding and defining the core functional requirement
     \label{fig:basic_kafka_operations}
 \end{figure}
 
-\section{Design}
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=1\linewidth]{imgs/BasicKafkaOperationsDiagram.png}
@@ -839,7 +837,7 @@ The project is significantly constrained by time, so I divided tasks into three 
 
 The technologies chosen for UI development significantly influence the design process. Therefore, I want to finalize the interface design before selecting the technology stack. In Figure~\ref{fig:interface_design}, I have highlighted the priority tasks. The most critical aspect is the main menu design, as its navigational capabilities and quick access to core features will determine whether users find the application useful. No matter how powerful the system is, if it’s inconvenient to use, users won’t engage with it.
 
-\subsection{Main Menu Design}
+\subsection{Main Menu Design}\label{subsec:main_menu_design}
 
 From my analysis of LazyDocker in Section~\ref{subsec:ld_analysis}, I identified several features I would like to include in my solution.
 
@@ -864,7 +862,7 @@ The first MVP version will only include the topic view and message view. I will 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\linewidth]{imgs/TopicsScreenDesign.png}
+    \includegraphics[width=.8\linewidth]{imgs/TopicsScreenDesign.png}
     \caption{Topics screen mockup}
     \label{fig:topics_screen_maquette}
 \end{figure}
@@ -878,20 +876,21 @@ The first MVP version will only include the topic view and message view. I will 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\linewidth]{imgs/MessageView.png}
+    \includegraphics[width=.8\linewidth]{imgs/MessageView.png}
     \label{fig:message_view}
     \caption{Message view}
 \end{figure}
 
 В целом этот экран не сильно отличается от экрана топиков, он показывает сообщения табличном виде, при выборе сообщения можно посмотреть его содержимое в editore в правой части экрана.
 
+\newpage
 \subsection{Tech Stack}
 
 Определившись с двумя важнейшими частами интерфейса я могу перейти к определению стака технологий, ниже на Figure~\ref{fig:tech_chart} я опять разделил технологии на три составляющие.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\linewidth]{imgs/TechDiagram.png}
+    \includegraphics[width=.8\linewidth]{imgs/TechDiagram.png}
     \label{fig:tech_chart}
 \end{figure}
 
@@ -900,7 +899,9 @@ The first MVP version will only include the topic view and message view. I will 
 \textbf{TUI Framework}: Далее по важности идет именно UI. Проведя ресерч я выделил четыре(На самом деле три) опции. Urwid, относительно устаревшая библиотека с не очень детальной документацией, но по скриншотам выглядит так, будто содержит в себе все нужные блоки и функционал для создания интерфейса по макетам. Из минусов поддерживает всего пару терминальных эмуляторов, а на виндоус вообще не запускается. Далее я наткнулся на Textual и влюбился в их документацию, все очень подробно расписанно, в эту библиотеку изначально встроенно множество виджетов, которые мне нужны будут для разработки терминального интерфейса. Ну и главное, textual заявляют, что запустить его можно практически где угодно, и везде он будет выглядеть одинакого, то что нужно для хорошей TUI утилиты. Но вымогли заметить, что я выделил не только его как preferable фреймворк, который буду использовать, но еще и другую опцию - Rich. На самом деле Rich был написан авторами textual и полностью сочетается с ним, поэтому я считаю их одним фреймворком, хотя технически это разные библиотеки.
 Еще я желтым выделил опцию сделать свой кастомный фреймворк. Этот вариант очень unlikely, но шанс не равен 0. Если мне не понравится textual, то придется искать другие варианты или писать решение самому, на что уйдет еще больше времени, поэтому в рамках coursework, я врядли прибегну к этому
 
-\textbf{Kafka client}: Обертка не может работать без способа подключения к самой системе. Опять я нашел два варианта, но у confluent\_kafka документация была получше и попроще, а так же гит репозиторий выглядит достаточно активным, поэтому я сделал выбор в пользу этой библиотеки. Опять же, как и TUI Framework, всегда есть вариант написать свой вариант библиотеки для подключения к кафке, но объективно это очень объмная задача и в рмках coursework я скорее всего не стану прибегать к таким отчаяным мерам.
+\textbf{Kafka client}: Обертка не может работать без подключения к самой системе. Я нашел два варианта, но у confluent\_kafka документация была получше и попроще, а так же гит репозиторий выглядит достаточно активным, поэтому я сделал выбор в пользу этой библиотеки. Опять же, как и TUI Framework, всегда есть вариант написать свой фреймворк, но объективно это очень объмная задача и в рамках coursework я скорее всего не стану прибегать к таким отчаяным мерам.
+
+\subsection{Testing and Debugging}
 
 \begin{figure}[htbp]
     \centering
@@ -908,12 +909,32 @@ The first MVP version will only include the topic view and message view. I will 
     \label{fig:enter-label}
 \end{figure}
 
+Я считаю важно изначально определить рамки тестирования, чтобы не тратить много времени на тестирования некритичных частей. Логирование - это essential вещь, которая должна быть в любом проекте, ведь без логов дебаг превращается в кошмар. Тоже самое и про "error highliting", подсвечивать в логах ошибки обязательно, чтобы их быо проще искать по огромному лог-файлу. Для evaluating стадии мне нужно будет привести доказательства тестов, а т.к. я планирую применять TDD(Test Driven Development) approach во время разработки, то видеть сколько процентов кода покрыто тестами будет полезно. 
+Т.к. я делаю MVP, то стресс тестинг и скейлабилити в данный момент не играют слишком важной роли, задача MVP работать и показать возможности системы стейкхолдеру, как скетч при рисовании MVP дает достаточное понимание, но при этом почти никогда не является расширяемым финальным решением. Поэтому я решил не делать performance benchmarking для первых релизов, а стресс тестинг делать в том случае, если будет достаточно времени.
 
-\begin{figure}
+\subsection{Release and Support}
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=1\linewidth]{imgs/ReleaseSupportDiagram.png}
     \label{fig:enter-label}
 \end{figure}
+
+Поддержка продукта после и во время разработки не менее важна, чем сама разработка. Я разбил эту секцию на три части. Документация, обновления и аналитика/анализ фидбека от стейкхолдеров. Документация - важная часть проекта, если над ним работает более одного человека, но т.к. это школьный проект с ограничеными времеными рамками, а хорошая документация обычно очень времязатратна я ограничусь комментариями в коде и встроенной библиотекой питона pydoc (https://docs.python.org/3/library/pydoc.html), которая конвертирует мои коментарии в коде в красивый html и cli manual pages
+
+Далее идут обновления. Вести трекинг версий приложения - это хорошая практика, а еще в финальном приложении можно будет предлагать юзерам на релизах новых версий обновить пакет. Но эта задача не является essential для MVP, а еще мне сложно оценить время, которое мне потребуется на реализацию этого функционала, поэтому эта задача точно откладывается до момента пока я не допилю основные фичи первого релиза.
+
+Feedback и Аналитика. Две вещи которые помогают улучшать приложение. В рамках проекта я работаю со своими стейкхолдерами и иттеративно собираю фидбек для улучшения приложения. Еще я считаю, что для оценки работы приложения недостаточно только фидбека, нужны метрики выраженные в цифрах для более точной оценки интерфейса, но собирать любые метрики с самого начала, пока у меня нет хоть каких-то юзеров, достаточно бесполезно и не является частью проекта, без которой нельзя сделать хорошее MVP, поэтому при условии набора небольшого количества пользователей (Стейкхолдеров), я скорее всего реализую эту фичу в следующих релизах 
+
+\section{Structer of the solution}
+
+С макетом интерфейса мы разобрались в сабсекции~\ref{subsec:main_menu_design}, но теперь, опираясь на технические решения, а точнее на язык программирования можно подумать о дизайне бэкенда - мозгов приложения, которые будут отвечать за обработку и передачу данных из кафки на фронтенд.
+
+При разработке в реальном мире широко используется DDD(Domain driven design). DDD подход позволяет не просто структуризировать проект, но и сделать это так, чтобы общение технической стороны с клиентами было максимально "безболезненым". И хоть мои стейкхолдеры - это разработчики, которые в целом поймут, о чем я говорю, но использование DDD позволит мне говорить с ними на одном языке. То есть вместо "Ну та штука, которая лежит в кафке и хранит сообщения" я скажу Topic и все поймут о чем я говорю. В этом и заключается гланый плюс DDD, а еще благодаря такому подходу мне проще будет структурировать архитектуру проекта
+
+Чтобы понимать, что я дальше буду писать важно знать, что такое Design Pattern
+\textbf{Паттерн проектирования} — это часто встречающееся решение определённой проблемы при проектировании архитектуры программ. Design patterns serve as guidelines for structuring your code in a way that promotes flexibility, reusability, and scalability. Если описывать их простым языком, это темплейты или же blueprints для решения определенной проблемы. Более подробно про них можно почитать тут https://refactoring.guru/design-patterns/what-is-pattern
+
+За основу приложения я решил взять MVC(Model-View-Controller) паттерн. MVC is a popular way of organizing your code. The big idea behind MVC is that each section of your code has a purpose, and those purposes are different. Some of your code holds the data of your app, some of your code makes your app look nice, and some of your code controls how your app functions. 
 
 
 
