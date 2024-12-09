@@ -1,0 +1,5 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{+w}{  }\PYG{n+nt}{default}\PYG{p}{:}
+\PYG{+w}{    }\PYG{n+nt}{host}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{localhost}
+\PYG{+w}{    }\PYG{n+nt}{port}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{9092}
+\end{Verbatim}

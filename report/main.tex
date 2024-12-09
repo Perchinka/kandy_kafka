@@ -17,7 +17,7 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
 \usepackage[utf8x]{inputenc}
-% \usepackage[english,russian]{babel}
+\usepackage[english,russian]{babel}
 \usepackage{cmap}
 
 \usepackage{titlesec}
@@ -53,7 +53,6 @@
 \captionsetup{compatibility=false}
 
 \newenvironment{code}{\captionsetup{type=listing}}{}
-\SetupFloatingEnvironment{listing}{name=Source Code}
 
 \setminted{
     breaklines=true,
@@ -1267,11 +1266,22 @@ module = Bootstrap.bootstraped.module_name
 This design avoids excessive dependency injection, making the system easier to debug and maintain.
 
 \newpage
-\subsection{First Release}
+\subsection{Configuration functionality}
 
 In my project, I decided to use the approaches of TDD (Test-Driven Development) and BDD (Behavior-Driven Development). First, I define features using the Gherkin syntax, then I write tests that describe the functionality I want to implement, and finally, I write the code that will pass these tests. 
 
 The first feature in my plan is related to connection configuration. I aim to simplify manual testing and provide a more comprehensive picture to my stakeholders during demos. By allowing changes to be made to the system from outside (e.g., through startup flags or a configuration file), I must strictly validate the data and throw meaningful errors if the user makes a mistake during input.
+
+Config will look like this, it will have: alias, host and port fields. I will do it as yaml configuration as many backend developers familiar with it. I thought about writing my own config-parser for educational porpuses, but decided that I will probably sink a lot of time into this and it's not really related to project. 
+
+\begin{code}
+  \begin{minted}{yaml}
+  default:
+    host: localhost
+    port: 9092
+  \end{minted}
+  \caption{Config file contents example}
+\end{code}  
 
 \begin{listing}[htbp]
   \begin{minted}[]{Gherkin}
@@ -1451,13 +1461,320 @@ The \texttt{scenarios} function links the Python code to the feature file. This 
 \textbf{BDD Connection:}
 Each \textbf{Given-When-Then} step in the Gherkin script is mirrored in the Python code using decorators: \texttt{@given}, \texttt{@when}, \texttt{@then}. For example, the "Missing Configuration File" scenario ensures that the application raises an error and prompts the user appropriately when no configuration file exists. Similarly, the "Valid Configuration File" scenario confirms that the configuration is parsed correctly, and the connection details are set as expected.
 
+\subsection{Running the First Test}
+
+Now, according to the standard procedure, I should check whether my code passes the tests. Even though I know it cannot, since I haven't written the implementation yet, I still need to verify and confirm that all the tests fail. Afterward, I can start writing the code. This is part of the Red-Green-Refactor cycle, which ensures that new functionality doesn't inadvertently affect the existing features and that all core functionalities continue to work as expected.
+
+\newpage
+For convenience, I added a command to run tests in the \textbf{Makefile}. In the future, I plan to include various levels of testing here (e.g., integration, unit, and behavior tests). For now, the \textbf{Makefile} looks as follows:
+
+\begin{code}
+  \begin{minted}[samepage]{make}
+    .DEFAULT_GOAL := help
+
+    help:
+      @awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+    install: ## Install dependencies
+      @poetry install
+
+    test: ## Run tests
+      @poetry run pytest
+
+    run: ## Run the application
+      @poetry run python -m kandy
+  \end{minted}
+  \caption{Makefile}
+\end{code}
+
+Next, we run the tests and hope they fail...
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/FirstTestFailed.png}
+  \end{center}
+  \caption{Initial Test Failure}
+\end{figure}
+
+After confirming that the code doesn't work, I can start implementing features. The first test checks the system's behavior when the configuration file is missing:
+
+\begin{code}
+  \begin{minted}[]{Python}
+# Non-existing configuration file scenario
+@pytest.fixture
+@given("Configuration file is not present")
+def non_existing_config_file(tmp_path):
+    return tmp_path / 'hosts.yaml'
+
+@pytest.fixture
+@when('system loads config')
+def config():
+    return Config()
+
+@then('application should prompt user to create or specify a configuration file')
+def check_prompt_to_create_config(config, non_existing_config_file):
+    with pytest.raises(HostsFileNotFound):
+        config.hosts_file = non_existing_config_file
+        config.load_hosts('default')
+  \end{minted}
+\end{code}
+
+Let’s break down what this test does:
+
+\begin{itemize}
+  \item \textbf{Given}: No configuration file is present. I provide a reference to a temporary auto-generated empty directory.
+  \item \textbf{When}: I initialize the \texttt{Config} class
+  \item \textbf{Then}: I plan to throw a custom exception, which will be caught and processed in the main function to display an error message in the terminal, it just makes design little bit cleaner, that printing error and exiting right after error. I will add a new method \texttt{load\_hosts} in the \texttt{Config} class to handle the configuration file and I'm gonna call it in my test (And probably in Bootstrap or entrypoint in actual code later).
+\end{itemize}
+
+The \texttt{Config} class now includes an additional field, \texttt{hosts\_file}, which will store the path to the configuration file. The default path is \texttt{"HOME\_DIRECTORY/.config/kandy/hosts.yaml"}. In the future, I'll need to refactor this to ensure platform compatibility (e.g., for Windows), but for this prototype, the current implementation is good enough. This field will be managed by the \texttt{load\_hosts} method, which accepts optional arguments for a custom configuration path and a cluster alias.
+
+We’ll start with the simplest part, the exception. In the \texttt{exceptions.py} file, I create a new class that inherits from \texttt{Exception}:
+
+\begin{code}
+  \begin{minted}{Python}
+  class HostsFileNotFound(Exception):
+    pass
+  \end{minted}
+\end{code}
+
+Now, I can raise this error and handle it elsewhere and thats it. Moving on to the \texttt{Config} module, I've revised how host and port fields are loaded from environment variables. Since the user can specify these via the command line, it makes sense to accept them as arguments during configuration initialization.
+
+\begin{code}
+  \begin{minted}{Python}
+  import os
+  from kandy_kafka import logger
+  from pathlib import Path
+
+  from kandy_kafka.exceptions import HostsFileHasWrongSyntax, HostsFileNotFound
+  import yaml
+
+  class Config:
+      LOGGING_LEVEL: str
+
+      KAFKA_HOST: str
+      KAFKA_PORT: int
+
+      def __init__(self, host=None, port=None) -> None:
+          self.LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+          logger.setup_logger(self.LOGGING_LEVEL)
+
+          self.hosts_file = Path.home() / ".config" / "kandy" / "hosts.yaml"
+
+          self.KAFKA_HOST = host
+          self.KAFKA_PORT = port
+  \end{minted}
+\end{code}
+
+The code uses Python's built-in \texttt{pathlib} library to determine the home directory, which simplifies future porting to Windows. \texttt{host} and \texttt{port} are passed as arguments but default to \texttt{None} since data can be sourced either from the command line or a configuration file. The \texttt{Config} class method will overwrite these values if the data is from a file.
+
+Here’s the \texttt{load\_hosts} method:
+
+\begin{code}
+  \begin{minted}{Python}
+    def load_hosts(self, clustername="default", config_file=None):
+        if not self.hosts_file.exists():
+            raise HostsFileNotFound(f"Hosts file {self.hosts_file} not found")
+
+        if config_file:
+            self.hosts_file = config_file
+  \end{minted}
+\end{code}
+
+This method only checks for the file's existence and raises an error if it doesn’t exist, using the \texttt{pathlib} library's built-in functionality.
+
+After implementing this, the code should pass the first test. Let’s run it using \texttt{make test}...
+
+\begin{figure}[!htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/BehaviourTestPassed.png}
+  \end{center}
+  \caption{}\label{fig:}
+\end{figure}
+
+After ensuring that the code works as intended, we proceed to the next test. This test verifies the system's behavior when the configuration file contains syntax errors. For this purpose, I utilized fixtures, which are pre-defined files, functions, and variables that create a testing environment. In this case, I used prepared configuration files. I divided the \textit{given} step into two parts: first, I create a file in the directory, and second, I write the contents of a specific fixture into that file. Since the test’s conditions are identical to the previous one (the \texttt{@when} step), \texttt{pytest} automatically reuses it, avoiding duplication.
+
+Unfortunately, I could not resolve the issue of validating specific error messages in \texttt{stderr}. For now, the error message is simply printed during the test execution, but I left a \texttt{\# TODO} comment for future improvements.
+
+\begin{code}
+  \begin{minted}[samepage]{Python}
+# Wrong syntax scenario
+@pytest.fixture
+@given("Configuration file is present")
+def config_file(tmp_path):
+    file = tmp_path / 'hosts.yaml'
+    file.touch()
+    return file
+
+@pytest.fixture
+@given(
+    parsers.parse("Configuration file has {error_type} syntax error"),
+    target_fixture='config_file_with_wrong_syntax'
+)
+def config_file_with_wrong_syntax(config_file, error_type):
+    assert config_file.exists()
+    config_fixture = Path("tests") / "fixtures" / "hosts" / f"wrong_syntax_{error_type}.yaml"
+    config_file.write_text(config_fixture.read_text())
+
+@then(parsers.parse("application should show {error}"))
+def check_prompt_to_fix_syntax(config, error, config_file):
+    print(error) # TODO check that actual error message is in the stderr (Or stdout)
+    with pytest.raises(HostsFileHasWrongSyntax):
+        config.load_hosts('default', config_file)
+  \end{minted}
+\end{code}
+
+To handle this test, I introduced a new exception, \textbf{HostsFileHasWrongSyntax}, and updated the \texttt{load\_hosts} method in the \texttt{Config} class. This method now includes three checks:
+
+\begin{itemize}
+    \item \textbf{Is the file empty?}
+    \item \textbf{Does the file contain the specified \texttt{clustername}?}
+    \item \textbf{Are the \texttt{host} and \texttt{port} parameters correctly assigned?}
+\end{itemize}
+
+These checks cover all the cases I aimed to address. If new errors arise during manual testing, I can easily add corresponding tests and extend the code to handle them.
+
+\begin{code}
+  \begin{minted}[samepage]{Python}
+def load_hosts(self, clustername="default", config_file=None):
+    if not self.hosts_file.exists():
+        raise HostsFileNotFound(f"Hosts file {self.hosts_file} not found")
+
+    if config_file:
+        self.hosts_file = config_file
+
+    with open(self.hosts_file, "r") as file:
+        hosts = yaml.safe_load(file)
+        if hosts is None:
+            raise HostsFileHasWrongSyntax(f"Hosts file {self.hosts_file} is empty")
+
+        if clustername not in hosts:
+            raise HostsFileHasWrongSyntax(
+                f"Clustername {clustername} not found in {self.hosts_file}"
+            )
+
+        cluster = hosts[clustername]
+        self.KAFKA_HOST = cluster.get("host")
+        self.KAFKA_PORT = cluster.get("port")
+
+    if not self.KAFKA_HOST or not self.KAFKA_PORT:
+        raise HostsFileHasWrongSyntax(
+            f"Host or port not found in {self.hosts_file}"
+        )
+  \end{minted}
+  \caption{Updated load\_hosts Method}
+\end{code}
+
+After running the updated code...
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/FinalBehaviourTest.png}
+  \end{center}
+  \caption{Final Test Results}
+\end{figure}
+
+Surprisingly (or perhaps not so surprisingly), all tests pass. Why? Because the test we just implemented is not a single test—it verifies multiple scenarios using the same algorithm (as many scenarios as there are variations of the \texttt{error} field in the Gherkin script) and in our case it does mean that it covers 3 ot of 6 tests. The first one test still passes as I didn't change any functionality linked to it, and the remaining two tests validate the happy path(they check that everything works without errors when a valid configuration file is provided), and scenario when YAML syntax itself is incorrect. 
+
+At this stage, no further changes are needed, as the code passes all tests. Ideally, I should begin refactoring. However, since the current codebase is relatively small and I am still drafting the prototype, clean code, while important, is not the highest priority at the moment.
+
+
+Как я и сказал выше, я хочу сделать не только поддержку конфига, но и флагов CLI, тоесть чтобы пользователь мог вводить данные например вот так
+
+\begin{code}
+  \begin{minted}{bash}
+  kandy --host "127.0.0.1" --port 8080
+  \end{minted}
+\end{code}
+
+Для поддержки флагов (аргументов) в питоне есть встроеная библиотека \textbf{argparse}, которую я и буду использовать.
+
+Аргументы однозначно относятся к entrypoint категории, поэтому я их отнес в main file (kandy.py) 
+
+\begin{code}
+  \begin{minted}{Python}
+from kandy_kafka.bootstrap import Bootstrap
+import argparse
+
+class ConditionalAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if namespace.clustername:
+            parser.error("clustername specified; --host and --port should not be used")
+        setattr(namespace, self.dest, values)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Kandy Kafka')
+    parser.add_argument("clustername", nargs='?', type=str, help='Cluster Name')
+    parser.add_argument("--host", type=str, default=None, help='Host', action=ConditionalAction)
+    parser.add_argument("--port", type=int, default=None, help='Port', action=ConditionalAction)
+
+    args = parser.parse_args()
+
+    if args.clustername and (args.host or args.port):
+        parser.error("Clustername specified; --host and --port should not be used")
+    if not args.clustername and (not args.host or not args.port):
+        parser.error("If clustername is not specified, both --host and --port must be provided")
+
+    Bootstrap()(clustername=args.clustername, host=args.host, port=args.port)
+
+if __name__ == '__main__':
+    main()
+  \end{minted}
+\end{code}
+
+Для исключения подачи и clustername и host and port одновременно в конфиг я решил предотвратить эту возможность на уровне ввода, не идеальное решение, но для MVP проекта более, чем достаточно. Так же я подаю host, port и clustername в Bootstrap в виде аргументов, а это значит, что пришло время его тоже изменить под новые требования.
+
+Новый бутстрап принимает в \_\_call\_\_ методе принимает **kwds и потом вытаскивает оттуда наши port, host и clustername. Я добавил немного логирования, оно не обязательно, но будет проще понять в некоторых конкретных случаях, на каком моменте запуска упало приложение, сократит время и количество затраченных сил на починку  
+\begin{code}
+  \begin{minted}[samepage]{Python}
+from dataclasses import dataclass
+import logging
+from typing import Any
+from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
+from kandy_kafka.config import Config
+
+
+@dataclass
+class Bootstraped:
+    config: Config
+    kafka_adapter: KafkaAdapter
+
+
+class Bootstrap:
+    bootstraped: Bootstraped
+
+    def __call__(self, *args: Any, **kwds: Any) -> Bootstraped:
+        logging.info("ATTEMPTING TO BOOTSTRAP - loading config")
+        config = Config(kwds["host"], kwds["port"])
+
+        if kwds["clustername"]:
+            config.load_hosts(kwds["clustername"])
+
+        logging.info("ATTEMPTING TO BOOTSTRAP - creating KafkaAdapter")
+        kafka_adapter = KafkaAdapter(config.KAFKA_HOST, config.KAFKA_PORT)
+
+        Bootstrap.bootstraped = Bootstraped(
+            config=config,
+            kafka_adapter=kafka_adapter,
+        )
+
+        logging.info("BOOTSTRAPING Completed")
+
+        return Bootstrap.bootstraped
+  \end{minted}
+\end{code}
+
+\subsection{Connecting to kafka}
+
+
 
 \appendix
 
 \chapter{System Design}\label{appendix:system_design}
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=0.9\linewidth]{imgs/SystemDesign.png}
+    \includegraphics[width=0.7\linewidth]{imgs/SystemDesign.png}
 \end{figure}
 
 \chapter{Files}
