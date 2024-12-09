@@ -3,6 +3,7 @@
 % \usepackage[T2A,T1]{fontenc}
 \usepackage{silence}
 
+\usepackage{pmboxdraw}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
@@ -16,7 +17,7 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
 \usepackage[utf8x]{inputenc}
-\usepackage[english,russian]{babel}
+% \usepackage[english,russian]{babel}
 \usepackage{cmap}
 
 \usepackage{titlesec}
@@ -45,11 +46,20 @@
 \usepackage{listings}
 
 \usepackage{minted}
+\usepackage{forest}
 
 \usepackage{adjustbox}
 \usepackage{subcaption}
 \captionsetup{compatibility=false}
 
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Source Code}
+
+\setminted{
+    breaklines=true,
+    frame=single,
+    framesep=5pt
+}
 
 \begin{document}
 
@@ -737,7 +747,9 @@ Time behaviour QAS have passed successfully (Response time less than 10 seconds 
 
 Having identified the requirements and success criteria, I can now proceed with designing the system itself. The primary goal of this process is to create a structure that facilitates the addition of new features and the maintenance of the project while preserving or improving its functionality. A thoughtful design approach is essential to ensure effective system development, maintainability, scalability, and adaptability for future changes.
 
-Any design process begins with the decomposition of the problem into manageable pieces of work and domain-specific elements. This activity often involves brainstorming. As a visual thinker, I decided to create a diagram that depicts the elements and sections of the system being designed.
+Any design process begins with the decomposition of the problem into manageable pieces of work and domain-specific elements. This activity often involves brainstorming.
+
+As a visual thinker, I decided to create a diagram that depicts the elements and sections of the system being designed.
 
 \section{Decomposition}
 
@@ -764,8 +776,8 @@ In the following sections, I will explain my thought process for each element an
 
 \newpage
 
-\subsection{Legend}
-
+\subsection{Prioritization}
+Features are categorized into \textbf{essential} (green), \textbf{desirable} (yellow), and \textbf{optional} (red):
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=.6\linewidth]{imgs/DesignLegend.png}
@@ -773,11 +785,9 @@ In the following sections, I will explain my thought process for each element an
     \label{fig:design_legend}
 \end{figure}
 
-In \textbf{Figure~\ref{fig:design_legend}}, the system design diagram legend provides a key for understanding the system design diagram. It is applicable for all the following diagrams in this section. 
-
 For the full diagram, refer to \textbf{Appendix~\ref{appendix:system_design}}. Given the large size of the diagram, I will discuss its components and subdivisions separately in the following sections
 
-\subsection{Define core functional requirements}
+\subsection{Core functional requirements}
 
 As mentioned earlier, understanding and defining the core functional requirements is a high-priority activity. I have divided this into three main blocks:
 
@@ -810,21 +820,13 @@ As mentioned earlier, understanding and defining the core functional requirement
     \label{fig:basic_kafka_operations}
 \end{figure}
 
-Based on Kafka's basic architecture (Figure~\ref{fig:kafka_arch}), four primary features come to mind that the management utility must support:
+Based on Kafka's architecture (Figure~\ref{fig:kafka_arch}), four primary features come to mind that the management utility must support:
 \begin{itemize}
     \item Working with topics
     \item Managing consumer groups
     \item Interfacing with producers
     \item Cluster management
 \end{itemize}
-
-The project is significantly constrained by time, so I divided tasks into three categories (Figure~\ref{fig:design_legend}). 
-
-\textbf{Green}: For the initial release, I must include support for working with topics, specifically creating and deleting them. Additionally, topic management includes reading messages from them. This will be the core functionality of my MVP solution.
-
-\textbf{Yellow}: If time permits, I will work on consumer group management. This feature was highlighted by my stakeholder as useful, but since other interfaces do not support it, it is not essential.
-
-\textbf{Red}: Tasks like cluster management are large in scope, and for the MVP, they would be overkill. I will not include them in this project but will prioritize them for future updates after the initial release.
 
 \subsection{Interface Structure}
 
@@ -849,7 +851,7 @@ Here, I adapt them to suit the needs of my utility:
     \item \textbf{Colors}: As mentioned in the analysis, colors play both an aesthetic and functional role. They help highlight important elements and focus the user’s attention where needed. Ideally, I would like to provide customizable palettes, but for the MVP, I will hardcode a basic color palette. If time permits, I will later update it to be configurable.
 \end{itemize}
 
-Based on LazyDocker, I sketched the following main menu mockup:
+Inspired by LazyDocker, I sketched the following main menu mockup:
 
 \begin{figure}[htbp]
     \centering
@@ -881,69 +883,574 @@ The first MVP version will only include the topic view and message view. I will 
     \caption{Message view}
 \end{figure}
 
-В целом этот экран не сильно отличается от экрана топиков, он показывает сообщения табличном виде, при выборе сообщения можно посмотреть его содержимое в editore в правой части экрана.
+Overall, this screen is not drastically different from the topics screen. It presents messages in a tabular format, and when a message is selected, its content can be viewed in an editor displayed on the right side of the screen.
 
 \newpage
 \subsection{Tech Stack}
 
-Определившись с двумя важнейшими частами интерфейса я могу перейти к определению стака технологий, ниже на Figure~\ref{fig:tech_chart} я опять разделил технологии на три составляющие.
+Having finalized the two most critical parts of the interface, I can now determine the technology stack. Below, in Figure~\ref{fig:tech_chart}, I have divided the technologies into three categories.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=.8\linewidth]{imgs/TechDiagram.png}
+    \caption{Technology Stack Overview}
     \label{fig:tech_chart}
 \end{figure}
 
-\textbf{Programming language}: Важнейшее решение для проекта, от языка зависит перформанс, стиль кода и подход к разработке в целом. Я бы наверное использовал rust или go, но к сожалению с ними я не знаком на достаточном уровне, чтобы быть увереным, что я смогу довести проект до какой-либо приемлемой стадии в сжатые сроки. C++ и C попадают в список rejected по той же причине, хотя и являются перспективным выбором, ведь я пишу приложение в оснвном расчитанное на Линуксоидов. Для создания легковесного, оптимизированного интерфейса для линуксовой командной строки эти два языка, мне кажется, подошли бы лучше всего. Я отказался от этих языков в пользу питона. Питон - простой для чтения и в тоже время очень мощный язык, имеет обширную базу библиотек, а еще я с ним занаком с 8 лет, так что я могу достаточно точно оценить многие задачи in terms of time, поэтому он будет лежать в основе проекта. 
+\textbf{Programming Language}: Choosing the programming language is a key decision for the project, as it affects performance, coding style, and the overall development approach. I considered using Rust or Go, but I am not sufficiently experienced with these languages to confidently complete the project within the given timeframe. C++ and C were also on the rejected list for the same reason, even though they are promising choices for creating lightweight, optimized interfaces for Linux command-line environments. These languages, in my opinion, would be excellent for developing a lightweight and optimized terminal interface tailored for Linux users. However, I chose Python instead. Python is both simple to read and powerful, with an extensive library ecosystem. Additionally, I have been working with Python since I was 8 years old, which enables me to estimate tasks with a high degree of accuracy in terms of time. For these reasons, Python will form the foundation of this project.
 
-\textbf{TUI Framework}: Далее по важности идет именно UI. Проведя ресерч я выделил четыре(На самом деле три) опции. Urwid, относительно устаревшая библиотека с не очень детальной документацией, но по скриншотам выглядит так, будто содержит в себе все нужные блоки и функционал для создания интерфейса по макетам. Из минусов поддерживает всего пару терминальных эмуляторов, а на виндоус вообще не запускается. Далее я наткнулся на Textual и влюбился в их документацию, все очень подробно расписанно, в эту библиотеку изначально встроенно множество виджетов, которые мне нужны будут для разработки терминального интерфейса. Ну и главное, textual заявляют, что запустить его можно практически где угодно, и везде он будет выглядеть одинакого, то что нужно для хорошей TUI утилиты. Но вымогли заметить, что я выделил не только его как preferable фреймворк, который буду использовать, но еще и другую опцию - Rich. На самом деле Rich был написан авторами textual и полностью сочетается с ним, поэтому я считаю их одним фреймворком, хотя технически это разные библиотеки.
-Еще я желтым выделил опцию сделать свой кастомный фреймворк. Этот вариант очень unlikely, но шанс не равен 0. Если мне не понравится textual, то придется искать другие варианты или писать решение самому, на что уйдет еще больше времени, поэтому в рамках coursework, я врядли прибегну к этому
+\textbf{TUI Framework}: The next most important aspect is the user interface. After conducting research, I identified four options. \texttt{Urwid} is a relatively outdated library with sparse documentation, but from the screenshots, it seems to include all the essential components for creating an interface based on my mockups. Its downsides are that it only supports a few terminal emulators and does not run on Windows at all. Then, I discovered \texttt{Textual} and was immediately impressed with its documentation—everything is well-documented, and the library includes numerous widgets required for developing a terminal interface. Additionally, \texttt{Textual} claims to be nearly universal, running seamlessly across different environments while maintaining consistent appearance, which is crucial for a good TUI utility. You may notice that I marked not only \texttt{Textual} as my preferred framework but also another option—\texttt{Rich}. Technically, \texttt{Rich} was created by the authors of \texttt{Textual} and integrates fully with it, so I consider them as a single framework, even though they are technically distinct libraries.
 
-\textbf{Kafka client}: Обертка не может работать без подключения к самой системе. Я нашел два варианта, но у confluent\_kafka документация была получше и попроще, а так же гит репозиторий выглядит достаточно активным, поэтому я сделал выбор в пользу этой библиотеки. Опять же, как и TUI Framework, всегда есть вариант написать свой фреймворк, но объективно это очень объмная задача и в рамках coursework я скорее всего не стану прибегать к таким отчаяным мерам.
+I also highlighted the option of building a custom framework in yellow. This option is highly unlikely but not impossible. If \texttt{Textual} fails to meet my needs, I may have to explore other options or develop a solution myself, which would require significantly more time. However, within the scope of this coursework, it is unlikely that I will pursue this route.
+
+\textbf{Kafka Client}: The wrapper cannot function without connecting to the system itself. I found two options, but \texttt{confluent\_kafka} has better and simpler documentation, along with a more active GitHub repository. Therefore, I chose this library. As with the TUI framework, creating a custom framework is always an option, but it is an extremely complex task and is unlikely to be part of this coursework.
 
 \subsection{Testing and Debugging}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=1\linewidth]{imgs/TestDebugDiagram.png}
-    \label{fig:enter-label}
+    \caption{Testing and Debugging Plan}
+    \label{fig:test_debug}
 \end{figure}
 
-Я считаю важно изначально определить рамки тестирования, чтобы не тратить много времени на тестирования некритичных частей. Логирование - это essential вещь, которая должна быть в любом проекте, ведь без логов дебаг превращается в кошмар. Тоже самое и про "error highliting", подсвечивать в логах ошибки обязательно, чтобы их быо проще искать по огромному лог-файлу. Для evaluating стадии мне нужно будет привести доказательства тестов, а т.к. я планирую применять TDD(Test Driven Development) approach во время разработки, то видеть сколько процентов кода покрыто тестами будет полезно. 
-Т.к. я делаю MVP, то стресс тестинг и скейлабилити в данный момент не играют слишком важной роли, задача MVP работать и показать возможности системы стейкхолдеру, как скетч при рисовании MVP дает достаточное понимание, но при этом почти никогда не является расширяемым финальным решением. Поэтому я решил не делать performance benchmarking для первых релизов, а стресс тестинг делать в том случае, если будет достаточно времени.
+It is crucial to establish the testing boundaries early on to avoid spending excessive time on non-critical areas. Logging is an essential feature for any project, as debugging without logs can become a nightmare. The same applies to error highlighting—errors should be highlighted in the logs to make them easier to locate in large log files. For the evaluation phase, I need to provide proof of testing, and since I plan to use a Test-Driven Development (TDD) approach during development, tracking the percentage of code covered by tests will be helpful.
+
+Since this is an MVP, stress testing and scalability are not critical at this stage. The MVP's goal is to function and demonstrate the system's capabilities to the stakeholders. Like a sketch in drawing, an MVP provides sufficient understanding but is almost never the final extensible solution. Therefore, I decided not to include performance benchmarking in the initial releases, and stress testing will only be conducted if time allows.
 
 \subsection{Release and Support}
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=1\linewidth]{imgs/ReleaseSupportDiagram.png}
-    \label{fig:enter-label}
+    \caption{Release and Support Plan}
+    \label{fig:release_support}
 \end{figure}
 
-Поддержка продукта после и во время разработки не менее важна, чем сама разработка. Я разбил эту секцию на три части. Документация, обновления и аналитика/анализ фидбека от стейкхолдеров. Документация - важная часть проекта, если над ним работает более одного человека, но т.к. это школьный проект с ограничеными времеными рамками, а хорошая документация обычно очень времязатратна я ограничусь комментариями в коде и встроенной библиотекой питона pydoc (https://docs.python.org/3/library/pydoc.html), которая конвертирует мои коментарии в коде в красивый html и cli manual pages
+Supporting the product during and after development is as important as the development itself. I divided this section into three parts: documentation, updates, and feedback/analytics.
 
-Далее идут обновления. Вести трекинг версий приложения - это хорошая практика, а еще в финальном приложении можно будет предлагать юзерам на релизах новых версий обновить пакет. Но эта задача не является essential для MVP, а еще мне сложно оценить время, которое мне потребуется на реализацию этого функционала, поэтому эта задача точно откладывается до момента пока я не допилю основные фичи первого релиза.
+\textbf{Documentation}: Documentation is a critical part of any project involving multiple developers. However, since this is a school project with limited time, and good documentation is typically time-intensive, I will focus on inline code comments and Python's built-in \texttt{pydoc} library (\url{https://docs.python.org/3/library/pydoc.html}), which converts comments in the code into well-formatted HTML and CLI manual pages.
 
-Feedback и Аналитика. Две вещи которые помогают улучшать приложение. В рамках проекта я работаю со своими стейкхолдерами и иттеративно собираю фидбек для улучшения приложения. Еще я считаю, что для оценки работы приложения недостаточно только фидбека, нужны метрики выраженные в цифрах для более точной оценки интерфейса, но собирать любые метрики с самого начала, пока у меня нет хоть каких-то юзеров, достаточно бесполезно и не является частью проекта, без которой нельзя сделать хорошее MVP, поэтому при условии набора небольшого количества пользователей (Стейкхолдеров), я скорее всего реализую эту фичу в следующих релизах 
+\textbf{Updates}: Tracking application versions is good practice. In the final application, I could offer users the option to update the package when new versions are released. However, this task is not essential for the MVP, and I find it challenging to estimate the time required for implementing this functionality. Thus, this task will be deferred until after the core features of the first release are completed.
 
-\section{Structer of the solution}
+\textbf{Feedback and Analytics}: These are two things that help improve the application. In this project, I work iteratively with my stakeholders, collecting feedback to refine the application. I also believe that assessing an application's performance requires more than just feedback—quantifiable metrics are needed for a more accurate evaluation. However, collecting metrics from the beginning, before acquiring any users, is relatively pointless and is not critical for developing a good MVP. Therefore, assuming a small number of initial users (stakeholders), I plan to implement this feature in future releases.
 
-С макетом интерфейса мы разобрались в сабсекции~\ref{subsec:main_menu_design}, но теперь, опираясь на технические решения, а точнее на язык программирования можно подумать о дизайне бэкенда - мозгов приложения, которые будут отвечать за обработку и передачу данных из кафки на фронтенд.
+\section{Structure of the Solution}
 
-При разработке в реальном мире широко используется DDD(Domain driven design). DDD подход позволяет не просто структуризировать проект, но и сделать это так, чтобы общение технической стороны с клиентами было максимально "безболезненым". И хоть мои стейкхолдеры - это разработчики, которые в целом поймут, о чем я говорю, но использование DDD позволит мне говорить с ними на одном языке. То есть вместо "Ну та штука, которая лежит в кафке и хранит сообщения" я скажу Topic и все поймут о чем я говорю. В этом и заключается гланый плюс DDD, а еще благодаря такому подходу мне проще будет структурировать архитектуру проекта
+We have already discussed the interface layout in Section~\ref{subsec:main_menu_design}, but now, based on the technical decisions—particularly the choice of programming language—we can consider the design of the backend, which is the core of the application responsible for processing and transferring data from Kafka to the frontend.
 
-Чтобы понимать, что я дальше буду писать важно знать, что такое Design Pattern
-\textbf{Паттерн проектирования} — это часто встречающееся решение определённой проблемы при проектировании архитектуры программ. Design patterns serve as guidelines for structuring your code in a way that promotes flexibility, reusability, and scalability. Если описывать их простым языком, это темплейты или же blueprints для решения определенной проблемы. Более подробно про них можно почитать тут https://refactoring.guru/design-patterns/what-is-pattern
+In real-world development, the Domain-Driven Design (DDD) approach is widely used. DDD not only helps structure the project but also facilitates communication between technical teams and stakeholders. My stakeholders are developers, so they can generally understand technical discussions. However, using DDD will allow us to "speak the same language." For example, instead of saying, "That thing in Kafka that stores messages," I can simply say "Topic," and everyone will understand. This is the main advantage of DDD—it aligns terminology and simplifies collaboration. Additionally, DDD makes it easier to structure the project architecture.
 
-За основу приложения я решил взять MVC(Model-View-Controller) паттерн. MVC is a popular way of organizing your code. The big idea behind MVC is that each section of your code has a purpose, and those purposes are different. Some of your code holds the data of your app, some of your code makes your app look nice, and some of your code controls how your app functions. 
+To understand the subsequent sections, it is essential to define what a design pattern is. A \textbf{design pattern} is a frequently used solution to a common problem encountered during software architecture design. Design patterns serve as guidelines for structuring your code in a way that promotes flexibility, reusability, and scalability. To explain it in simple terms, a design pattern is like a blueprint or template for solving a specific problem. For further details, see \url{https://refactoring.guru/design-patterns/what-is-pattern}.
 
+For the application, I decided to base the architecture on the MVC (Model-View-Controller) design pattern. MVC is a popular method of organizing code. The central idea of MVC is that each section of your code has a distinct purpose:
+\begin{itemize}
+    \item \textbf{Model}: Handles the data and business logic of the application. It fetches and processes data, typically from Kafka in our case.
+    \item \textbf{View}: Manages the display and presentation of the data. For this project, it will be responsible for the terminal user interface (TUI).
+    \item \textbf{Controller}: Acts as the intermediary between the Model and View. It processes user input, updates the Model, and refreshes the View accordingly.
+\end{itemize}
 
+The primary advantage of MVC is that it separates concerns, making the code easier to maintain and scale. Moreover, since I am following a Test-Driven Development (TDD) approach, MVC naturally supports testing by isolating the logic in the Model and keeping the View and Controller relatively lightweight.
+
+\subsection{MVC use}
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/InitialArchitecture.png}
+  \end{center}
+  \caption{}\label{fig:mvc_diagram}
+\end{figure}
+
+In Figure~\ref{fig:mvc_diagram}, I present a high-level overview of how I plan to implement the MVC pattern for this project. Let us briefly examine each component:
+
+\subsubsection{Model}
+
+The Model will handle all interactions with Kafka. This includes:
+\begin{itemize}
+    \item Fetching metadata (e.g., list of topics, consumer groups).
+    \item Reading and writing messages to and from topics.
+    \item Monitoring cluster health and performance metrics.
+\end{itemize}
+
+\subsubsection{View}
+
+The View is responsible for rendering the user interface. I will use the \texttt{textual} and \texttt{rich} libraries to build an intuitive terminal-based UI. The main components include:
+\begin{itemize}
+    \item \textbf{Main Menu}: Displays the core features and navigational options.
+    \item \textbf{Data Tables}: For presenting topics, messages, and metrics in an organized format.
+    \item \textbf{Message Viewer}: Provides a detailed view of individual messages, basically editor.
+\end{itemize}
+
+\subsubsection{Controller}
+
+The Controller will handle user inputs (e.g., keyboard shortcuts, navigation commands) and translate them into actions. For example:
+\begin{itemize}
+    \item If a user selects a topic, the Controller will fetch the corresponding messages via the Model and update the View.
+    \item If a user deletes a topic, the Controller will invoke the appropriate method in the Model and refresh the View.
+\end{itemize}
+
+By centralizing input handling in the Controller, we ensure that the business logic in the Model remains decoupled from the presentation logic in the View.
+
+\subsection{Architecture}
+
+\begin{figure}[htpb]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/ArchitectureDetailed.png}
+  \end{center}
+  \caption{Detailed Architecture Overview}\label{fig:detailed_arch}
+\end{figure}
+
+After spending some time sketching out ideas, I arrived at this architecture. All components are divided into three categories and follow the MVC pattern. The system is initialized from a bootstrap class, and public objects are stored in this class to allow them to be accessed from anywhere within the system.
+
+\begin{itemize}
+  \item \textbf{Controller}: The brains of the application, responsible for processing and dispatching signals to other systems. Includes:
+    \begin{itemize}
+      \item \textbf{Exceptions}: A set of custom exceptions that the system will throw in case of errors. While not critical for an MVP, they will enhance user feedback when reporting bugs and speed up development by clarifying error-handling logic.
+    \end{itemize}
+
+  \item \textbf{Model}: Holds all the data and the classes needed to access this data. Includes:
+    \begin{itemize}
+      \item \textbf{Configuration Class}: A class that stores configurable parameters. During initialization, it loads data like the Kafka host, login, and password from configuration files or environment variables. Centralizing all configurable parameters makes refactoring simpler by clearly separating responsibilities
+      \item \textbf{Models}: Specifications for the data models the system works with. Essentially, these are data classes used to validate incoming and outgoing data
+      \item \textbf{Adapters}: Adapters follow a design pattern and act as an interface to external systems. Multiple adapters could be supported, but for the MVP, I plan to focus on Kafka. The structure of the Kafka adapter is detailed in subsection~\ref{subsec:Adapter}
+    \end{itemize}
+
+  \item \textbf{View}: The frontend of the application, containing the views or displays that the user interacts with. The controller reads the user input, processes it, and displays the appropriate information through the views. There could be multiple views (e.g., web, CLI, native app), each with a different implementation but consistent functionality. I plan to implement in the first release a Topics view (TUI) and configureable parameter inputs (CLI)
+\end{itemize}
+
+\subsection{Models}
+
+In the first release, I will focus on Topics and Messages. Therefore, the primary models will be \texttt{Topic} and \texttt{Message}. However, given that Kafka topics are divided into partitions, and messages reside in partitions rather than directly in topics, it makes sense to add \texttt{Partition} as a model. This simplifies data parsing and supports future functionality.
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{imgs/Models.png}
+  \end{center}
+  \caption{Model Structure}\label{fig:models}
+\end{figure}
+
+The models are based on Kafka objects and initially use Kafka's native data types to avoid unnecessary data conversion overhead.
+
+\newpage
+\subsection{Adapter}\label{subsec:Adapter}
+
+An adapter is an interface, and every interface has a specification. For example, an adapter converting from a UK plug to a European socket must always take three prongs as input and produce two as output. Regardless of the internal implementation of the adapter it follows this "rules". Similarly, here, I use an abstract class to specify the adapter interface for Kafka.
+
+The abstract class defines the abstract methods that the business logic will interact with. An adapter class will inherit from this abstract class and provide concrete implementations of these methods. This concept is easier to understand when viewed in Figure~\ref{fig:AdapterUML}.
 
 \begin{figure}[htpb]
     \centering
     \includegraphics[width=1\linewidth]{imgs/AdapterUML.png}
-    \caption{Adapter Example}
-    \label{fig:AdapterUML}
+    \caption{Adapter Example}\label{fig:AdapterUML}
 \end{figure}
+
+I have outlined several potential methods for the system, but for the first release, I will focus on implementing only two: \texttt{get\_topics()} and \texttt{get\_messages()}.
+
+\chapter{Development}
+\section{Preparation}
+
+\subsection{Folder Structure}
+
+\begin{figure}[htbp]
+\centering
+\begin{BVerbatim}
+.
+├── kandy_kafka/
+│   ├── adapters/
+│   │   ├── __init__.py
+│   │   └── kafka_adapter.py
+│   ├── gui/
+│   │   ├── __init__.py
+│   │   ├── controller.py
+│   │   └── views
+│   │       └── topic_view.py
+│   ├── bootstrap.py
+│   ├── config.py
+│   ├── logger.py
+│   └── models.py
+├── tests/
+├── docker-compose.kafka.yaml
+├── kandy.py
+├── LICENSE
+├── Makefile
+├── pyproject.toml
+└── README.md
+\end{BVerbatim}
+\caption{Project folder structure}
+\end{figure}
+
+For this project, I chose to use the `poetry` dependency manager instead of the standard `pip`. `Poetry` simplifies the management of environments and dependencies but requires a specific project structure. For instance, the code must reside in a folder named after the project unless specified otherwise in the configuration file. Additionally, the root directory must contain a \texttt{README.md} file, along with all Git-related files and scripts (e.g., test scripts). 
+
+The core code is stored in the \texttt{kandy\_kafka/} folder. Below, I describe the purpose of each file and folder:
+
+\begin{itemize}
+  \item \textbf{README.md}: Contains project information, including a description, requirements, and installation instructions.
+  \item \textbf{pyproject.toml}: Used by \texttt{poetry} to define dependencies and project metadata. A detailed version is available in Appendix~\ref{appendix:libs}.
+  \item \textbf{Makefile}: A script for automating tasks using the \texttt{make} tool\footnote{\textbf{Make} is a command-line tool for executing tasks defined in a configuration file.}.
+  \item \textbf{LICENSE}: Since I plan to open-source this project after my A-levels, I included the GPL license to guarantee end-user freedoms to run, study, share, and modify the software.
+  \item \textbf{kandy.py}: The entry point of the application that the user will run.
+  \item \textbf{docker-compose.kafka.yaml}: This file specifies the configuration for Docker Compose, which I use to set up a Kafka environment for testing.
+  \item \textbf{kandy\_kafka/}: Contains the core project code:
+    \begin{itemize}
+      \item \textbf{adapters/}: Holds adapter and repository files.
+      \item \textbf{gui/}: Contains views and the controller.
+      \item \textbf{bootstrap.py}: Defines the application startup logic.
+      \item \textbf{config.py}: Handles external configuration parameters.
+      \item \textbf{logger.py}: Manages logging setup using Python's built-in \texttt{logging} library.
+      \item \textbf{models.py}: Contains data models, represented as Python \texttt{dataclasses}.
+    \end{itemize}
+  \item \textbf{tests/}: Directory containing automated tests.
+\end{itemize}
+
+This folder structure enforces separation of concerns, helping to write cleaner, maintainable code.
+
+\subsection{Libraries}
+
+The latest version of \texttt{pyproject.toml} is provided in Appendix~\ref{appendix:libs}. For now, I have included the following libraries:
+
+\begin{itemize}
+  \item \textbf{pytest}: A testing framework for creating and running test cases efficiently.
+  \item \textbf{pydantic}: A data validation library
+  \item \textbf{confluent-kafka}: A library chosen during the design phase to handle Kafka cluster communication.
+  \item \textbf{urwid}: Although I initially selected \texttt{textual} as the primary library for GUI development, I decided to prototype one view using \texttt{urwid} for comparison and learning purposes. This experiment will help refine my choice.
+\end{itemize}
+
+\newpage
+
+\section{Coding}
+\subsection{Project Skeleton}
+
+I began by creating the skeleton of my application. This involves defining the classes and functions I plan to use, without implementing the actual logic yet.
+
+
+\begin{code}
+  \begin{minted}[fontsize=\small, breaklines]{Python}
+# kandy_kafka/logger.py
+
+import logging
+
+
+def setup_logger(log_level: str):
+    """
+    Set up the logger for the application.
+    """
+    # Remove all handlers associated with the root logger object.
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    logging.basicConfig(
+        format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
+        datefmt="%Y-%m-%d:%H:%M:%S",
+        level=log_level,
+        filename="kandy_kafka.log",
+    )
+  \end{minted}
+\caption{Logger setup function}
+\end{code}
+
+For logging, I reused a function from one of my previous projects, making minor adjustments. The function initializes a logger and formats the log output to be written to a file with name \texttt{kandy\_kafka.log} instead of \texttt{stdout}.
+
+
+\begin{code}
+  \begin{minted}[fontsize=\small]{Python}
+# kandy_kafka/config.py
+
+import os
+from kandy_kafka import logger
+
+
+class Config:
+    LOGGING_LEVEL: str
+
+    KAFKA_HOST: str
+    KAFKA_PORT: int
+
+    def __init__(self) -> None:
+        self.LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+        logger.setup_logger(self.LOGGING_LEVEL)
+
+        self.KAFKA_HOST = os.getenv("KAFKA_HOST", "localhost")
+        self.KAFKA_PORT = int(os.getenv("KAFKA_PORT", 9092))
+  \end{minted}
+\caption{Configuration class}
+\end{code}
+
+Next on the line was configuration. This is a class with public fields that are filled from environment variables or configuration files at application startup. The configuration contains fields for the Kafka cluster host and port, which will later be used in the Kafka adapter. I also included the logging level in the configuration, allowing the application to adjust the detail level of logs (e.g., \texttt{ERROR}, \texttt{DEBUG}, \texttt{INFO}). Not necessary for this type of project but still I think it is a good practice.
+
+\begin{code}
+  \begin{minted}[fontsize=\small]{Python}
+# kandy_kafka/adapters/kafka_adapter.py
+
+from abc import ABC, abstractmethod
+
+
+class AbstractKafkaClusterAdapter(ABC):
+    """
+    Abstract base class for Kafka cluster adapters.
+
+    Defines the interface for interacting with a Kafka cluster, including fetching topics
+    and retrieving messages from a given topic.
+    """
+    @abstractmethod
+    def get_topics(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_messages(self, topic_name: str):
+        raise NotImplementedError
+
+
+class KafkaAdapter(AbstractKafkaClusterAdapter):
+    """
+    Kafka adapter that implements the methods to interact with a Kafka cluster using
+    confluent-kafka library.
+    """
+    def __init__(self, host: str, port: int):
+        pass
+
+    def get_topics(self):
+        pass
+
+    def get_messages(self, topic_name: str):
+        pass
+  \end{minted}
+\caption{Kafka adapter implementation}
+\end{code}
+
+The adapter interface defines the methods required for interaction with a Kafka cluster, such as retrieving topic names and fetching messages from topics. The implementation of the \texttt{KafkaAdapter} class is currently a placeholder, as the exact details depend on the chosen library. 
+The abstract class ensures that any child class implements all required methods by raising a \texttt{NotImplementedError} if a method is missing. The \texttt{KafkaAdapter} class includes an \texttt{\_\_init\_\_} method that takes the Kafka host and port as arguments, preparing it for future implementation.
+\newpage
+
+\begin{code}
+  \begin{minted}[fontsize=\small]{Python}
+# kandy_kafka/bootstrap.py
+
+from dataclasses import dataclass
+from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
+from kandy_kafka.config import Config
+
+
+@dataclass
+class Bootstraped:
+    kafka_adapter: KafkaAdapter
+    config: Config
+
+
+class Bootstrap:
+    bootstraped: Bootstraped
+
+    def __call__(self):
+        config = Config()
+        kafka_adapter = KafkaAdapter(config.KAFKA_HOST, config.KAFKA_PORT)
+        bootstraped = Bootstraped(
+            kafka_adapter=kafka_adapter,
+            config=config
+        )
+
+        return bootstraped
+  \end{minted}
+\caption{Bootstrap implementation}
+\end{code}
+
+Next, I created the bootstrap mechanism. This class initializes and orchestrates the application components, making them accessible through a single point. The \texttt{Bootstraped} dataclass contains the objects that need to be shared across the system, such as the Kafka adapter and configuration.
+
+The \texttt{\_\_call\_\_} method initializes the system components and returns a \texttt{Bootstraped} object. This approach allows components to be accessed globally without passing them explicitly between functions, simplifying the code.
+
+\begin{code}
+  \begin{minted}[]{Python}
+from kandy_kafka.bootstrap import Bootstrap
+
+module = Bootstrap.bootstraped.module_name
+  \end{minted}
+\caption{Accessing modules through the bootstrap}
+\end{code}
+
+This design avoids excessive dependency injection, making the system easier to debug and maintain.
+
+\newpage
+\subsection{First Release}
+
+In my project, I decided to use the approaches of TDD (Test-Driven Development) and BDD (Behavior-Driven Development). First, I define features using the Gherkin syntax, then I write tests that describe the functionality I want to implement, and finally, I write the code that will pass these tests. 
+
+The first feature in my plan is related to connection configuration. I aim to simplify manual testing and provide a more comprehensive picture to my stakeholders during demos. By allowing changes to be made to the system from outside (e.g., through startup flags or a configuration file), I must strictly validate the data and throw meaningful errors if the user makes a mistake during input.
+
+\begin{listing}[htbp]
+  \begin{minted}[]{Gherkin}
+Feature: Read and validate host configuration
+
+  Scenario: Error when no configuration file is found
+    Given Configuration file is not present
+    When system loads config  
+    Then application should prompt user to create or specify a configuration file
+  
+  Scenario Outline: Configuration file has syntax error
+    Given Configuration file is present
+    And Configuration file has <error_type> syntax error
+    When system loads config
+    Then application should show <error>
+
+    Examples:
+      | error_type   | error                  |
+      | missing_host | "Host is missing"      |
+      | missing_port | "Port is missing"      |
+      | empty_file   | "Configuration file is empty" |
+
+  Scenario: Configuration file is valid
+    Given Configuration file is present
+    And Configuration file has valid syntax
+    When system loads config
+    Then config should have valid connection details
+
+  Scenario: Configuration file has invalid yaml syntax
+    Given Configuration file is present
+    And Configuration file has invalid yaml syntax
+    When system loads config
+    Then application should raise yaml error
+  \end{minted}
+\end{listing}
+
+How should you approach reading this? As mentioned earlier, this is a Gherkin script, a structured language specifically designed for Behavior-Driven Development (BDD). Its primary purpose is to describe system behavior in plain text, bridging the gap between technical developers and non-technical stakeholders.
+
+\newpage
+The Gherkin script is organized into \textbf{features}, which represent high-level functionalities of the system. Each feature is further divided into \textbf{scenarios}, outlining specific use cases or tests related to that feature. The scenarios follow a clear and consistent structure:
+
+\begin{itemize}
+  \item \textbf{Given}: Sets up the initial state or preconditions required for the test.
+  \item \textbf{When}: Specifies the action or event that triggers the behavior.
+  \item \textbf{Then}: Describes the expected outcome or result.
+\end{itemize}
+
+Consider the following scenario:
+
+\begin{minted}[]{Gherkin}
+Scenario: Error when no configuration file is found
+  Given Configuration file is not present
+  When system loads config
+  Then application should prompt user to create or specify a configuration file
+\end{minted}
+
+This scenario describes the behavior of the system when no configuration file is found. Each line is self-explanatory, making it accessible to developers and stakeholders alike.
+
+For repetitive tests involving different inputs and outputs, Gherkin provides \textbf{Scenario Outlines}. These serve as templates for multiple test cases. For example:
+
+\begin{minted}[]{Gherkin}
+Scenario Outline: Configuration file has syntax error
+  Given Configuration file is present
+  And Configuration file has <error_type> syntax error
+  When system loads config
+  Then application should show <error>
+
+  Examples:
+    | error_type   | error                  |
+    | missing_host | "Host is missing"      |
+    | missing_port | "Port is missing"      |
+    | empty_file   | "Configuration file is empty" |
+\end{minted}
+
+Here, the \texttt{<error\_type>} and \texttt{<error>} placeholders represent variables that are defined in the \texttt{Examples} section. This structure allows the same scenario to be tested with multiple conditions.
+
+\begin{code}
+  \begin{minted}[samepage=false]{Python}
+import pytest
+from pytest_bdd import parsers, scenarios, given, when, then
+import yaml
+
+from kandy_kafka.config import Config
+from kandy_kafka.exceptions import HostsFileHasWrongSyntax, HostsFileNotFound
+from pathlib import Path
+
+scenarios("../features/hosts.feature")
+
+
+# Non-existing configuration file scenario
+@pytest.fixture
+@given("Configuration file is not present")
+def non_existing_config_file(tmp_path):
+    return tmp_path / "hosts.yaml"
+
+
+@pytest.fixture
+@when("system loads config")
+def config():
+    return Config()
+
+
+@then("application should prompt user to create or specify a configuration file")
+def check_prompt_to_create_config(config, non_existing_config_file):
+    with pytest.raises(HostsFileNotFound):
+        config.hosts_file = non_existing_config_file
+        config.load_hosts("default")
+
+
+# Wrong syntax scenario
+@pytest.fixture
+@given("Configuration file is present")
+def config_file(tmp_path):
+    file = tmp_path / "hosts.yaml"
+    file.touch()
+    return file
+
+
+@pytest.fixture
+@given(
+    parsers.parse("Configuration file has {error_type} syntax error"),
+    target_fixture="config_file_with_wrong_syntax",
+)
+def config_file_with_wrong_syntax(config_file, error_type):
+    assert config_file.exists()
+    config_fixture = (
+        Path("tests") / "fixtures" / "hosts" / f"wrong_syntax_{error_type}.yaml"
+    )
+    config_file.write_text(config_fixture.read_text())
+
+
+@then(parsers.parse("application should show {error}"))
+def check_promt_to_fix_syntax(config, error, config_file):
+    print(error)  # TODO check that valid error message is in the stderr (Or stdout)
+    with pytest.raises(HostsFileHasWrongSyntax):
+        config.load_hosts("default", config_file)
+
+# Correct syntax scenario
+@pytest.fixture
+@given("Configuration file has valid syntax")
+def config_file_with_correct_syntax(config_file):
+    config_file.write_text(
+        """
+        default:
+            host: localhost
+            port: 9092
+        """
+    )
+
+
+@then("config should have valid connection details")
+def check_config_connection_details(config, config_file):
+    config.load_hosts("default", config_file)
+    assert config.KAFKA_HOST == "localhost"
+    assert config.KAFKA_PORT == 9092
+
+
+# Invalid yaml syntax scenario
+@pytest.fixture
+@given("Configuration file has invalid yaml syntax")
+def config_file_with_invalid_yaml_syntax(config_file):
+    config_file.write_text("][")
+
+
+@then("application should raise yaml error")
+def check_yaml_error(config, config_file):
+    with pytest.raises(yaml.YAMLError):
+        config.load_hosts("default", config_file)
+  \end{minted}
+\end{code}
+
+The code implements the scenarios defined in the feature file using the \texttt{pytest-bdd} plugin. 
+
+In the BDD workflow, the \textbf{Given-When-Then} steps in the feature file correspond directly to Python functions in the test suite. These steps are implemented as pytest fixtures and assertions to validate the application's behavior.
+The \texttt{scenarios} function links the Python code to the feature file. This enables each scenario in the Gherkin script to execute its corresponding test implementation.
+
+\textbf{BDD Connection:}
+Each \textbf{Given-When-Then} step in the Gherkin script is mirrored in the Python code using decorators: \texttt{@given}, \texttt{@when}, \texttt{@then}. For example, the "Missing Configuration File" scenario ensures that the application raises an error and prompts the user appropriately when no configuration file exists. Similarly, the "Valid Configuration File" scenario confirms that the configuration is parsed correctly, and the connection details are set as expected.
+
 
 \appendix
 
