@@ -66,6 +66,8 @@
         \textit{Kandy: CLI tool for managing Kafka}}
 
 \author{\textbf{Alex Lukin}\\
+Center: 22109\\
+Student: 009961\\
 Chesterton Community College\\
 \textit{Cambridge, United Kingdom}\\}
 
@@ -100,7 +102,7 @@ To represent the target audience, I have identified a key user persona: \textbf{
 
 \newpage
 
-\section{Kafka Architecture}
+\section{Kafka Architecture}\label{Kafka_architecture}
 
 Throughout whole project, I will use terminology specific to Kafka’s architecture to describe its components and functionalities. So
 this subsection dives into the foundational concepts of Kafka. For better understanding the key ideas behind Kafka and its functionality, let’s break it down into its core components and how they work together.
@@ -1678,7 +1680,6 @@ Surprisingly (or perhaps not so surprisingly), all tests pass. Why? Because the 
 
 At this stage, no further changes are needed, as the code passes all tests. Ideally, I should begin refactoring. However, since the current codebase is relatively small and I am still drafting the prototype, clean code, while important, is not the highest priority at the moment.
 
-
 Как я и сказал выше, я хочу сделать не только поддержку конфига, но и флагов CLI, тоесть чтобы пользователь мог вводить данные например вот так
 
 \begin{code}
@@ -1725,7 +1726,8 @@ if __name__ == '__main__':
 
 Для исключения подачи и clustername и host and port одновременно в конфиг я решил предотвратить эту возможность на уровне ввода, не идеальное решение, но для MVP проекта более, чем достаточно. Так же я подаю host, port и clustername в Bootstrap в виде аргументов, а это значит, что пришло время его тоже изменить под новые требования.
 
-Новый бутстрап принимает в \_\_call\_\_ методе принимает **kwds и потом вытаскивает оттуда наши port, host и clustername. Я добавил немного логирования, оно не обязательно, но будет проще понять в некоторых конкретных случаях, на каком моменте запуска упало приложение, сократит время и количество затраченных сил на починку  
+Новый бутстрап принимает в \_\_call\_\_ методе принимает **kwds и потом вытаскивает оттуда наши port, host и clustername. Я добавил немного логирования, оно не обязательно, но будет проще понять в некоторых конкретных случаях, на каком моменте запуска упало приложение, сократит время и количество затраченных сил на debug
+
 \begin{code}
   \begin{minted}[samepage]{Python}
 from dataclasses import dataclass
@@ -1765,12 +1767,462 @@ class Bootstrap:
   \end{minted}
 \end{code}
 
+After adding this code we run tests again, just to check that everything works as it should and now we can start application from a CLI, so first step is done
+
 \subsection{Connecting to kafka}
 
+Далее по плану идет работа с топиками, а это значит интеграция с кафкой. Обычно в компаниях кафка висит в облаке на специально выделенных серверах, но у меня такой роскоши нет, да и при разработке это не всегда удобно, иметь что-то на сервере, а не локально, поэтому тестировать я буду в окружении из докер контейнеров. Я уже говорил про докер в секции анализа, но думаю повториться будет не лишним. Докер - инструмент докеризации сервисов, если говорить кратко, то он позволяет запустить любой сервис там, где он сам может запуститься, что очень удобно. Так же я могу внешне и внутрене влиять на контейнеры симулируя нагрузку и различные условия, которые не смог бы потестировать на реальном сервере, поэтому я использую докер. Настройка контейнеров сама по себе простая, найти на официальном сайте образ, скопировать название, добавить в файлик и вуаля, сервис работает как новый, но как я и сказал, докер позволяет очень тонко работать с окружением и имеет кучу необязательных, но интересных параметров. Сейчас я покажу получившийся конфиг и расскажу что да как в нем работает:
+
+\begin{code}
+  \begin{minted}[fontsize=\small]{YAML}
+    version: '3.8'
+
+services:
+  zookeeper:
+      image: "confluentinc/cp-zookeeper"
+      ports:
+        - 32181:32181
+      environment:
+        - ZOOKEEPER_CLIENT_PORT=32181
+
+  kafka:
+      image: confluentinc/cp-kafka
+      ports:
+        - 9092:9092
+        - 29092:29092
+      healthcheck:
+        test: nc -z localhost 9092 || exit -1
+        start_period: 15s
+        interval: 5s
+        timeout: 10s
+        retries: 10
+      depends_on:
+        - zookeeper
+      environment:
+        - KAFKA_BROKER_ID=1
+        - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
+        - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+        - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP = PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+        - KAFKA_INTER_BROKER_LISTENER_NAME = PLAINTEXT
+        - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR = 1
+    
+  init-kafka:
+    image: confluentinc/cp-kafka
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic test2 --replication-factor 1 --partitions 1
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:9092 --list
+      "
+
+  \end{minted}
+  \caption{daredevil}
+\end{code}
+
+И так, что же тут происходит. Я запускаю кафку, и пробрасываю порты извне в контейнер, теперь к сервису можно будет обратиться по адрессу моего компьютера (в моем случае просто localhost) и портам 9092 и 29092. Потом идут переменные окружения, они обязательно нужны для запуска кафки, но есть несколько параметров, таких как тип шифрования, логин-пароль и пара параметров кафки, с которыми мне скорее всего не нужно будет работать. 
+Кафка, как я описывал в секции~\ref{Kafka_architecture}, зависит на данный момент от другого сервиса, который называется zookeeper, поэтому пришлось поднимать его тоже и настраивать взаимоотношения между сервисами. Третий сервис я добавил в виде тестовой платформы, точнее платформы с тестами. Этот сервис будет заполнять кафку тестовыми данными, он завязан на основную систему и следит за ее "здоровьем" в начале, она не сможет закинуть данные в незапустившийся контейнер 
+
+На данный момент init-kafka(Так я буду называть тестовую платформу) просто создает два пустых топика. Возможно в будущем я перейду на питоновские фикстуры, но в данный момент мне кажется такой подход более благолазурмным. Что касается питона, а точнее тестов, то они получились достаточно простыми. в будущем я добавлю проверки на сообщения и дополнительные тесты для обеих тем. Сейчас же, я немного подумал, и решил изменить подход, кафка будет настраиваться не в docker-compose, а через отдельный скриптик:
+
+\begin{code}
+  \begin{minted}[fontsize=\small]{bash}
+echo -e 'Creating kafka topics'
+for i in {1..3}; do
+  kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic "test$i" --replication-factor 1 --partitions 1
+done
+
+echo -e 'Kafka topics:'
+kafka-topics --bootstrap-server kafka:9092 --list
+
+echo -e 'Filling test1 topic with 10 messages'
+for i in {1..10}; do
+  echo "Message$i" | kafka-console-producer --bootstrap-server kafka:9092 --topic test1
+done
+
+echo "askdl" >> /tmp/healthy
+
+tail -f /dev/null
+
+  \end{minted}
+\end{code}
+
+And I will call it in Dockerfile which will be used in docker-compose. Звучит сложно, но на самом деле такой подход немного проще, чем был до этого, т.к. я могу легко работать с логикой и вместо 30 вызовов команды "добавить сообщение", я могу просто написать цикл и вызвать его.
+
+\begin{code}
+  \begin{minted}{YAML}
+FROM confluentinc/cp-kafka:latest
+
+WORKDIR /app
+
+COPY tests/kafka_setup.sh ./create_and_fill_topics.sh
+
+USER root
+RUN chmod +x ./create_and_fill_topics.sh
+
+CMD ["/bin/bash", "-c", "./create_and_fill_topics.sh"]
+
+  \end{minted}
+\end{code}
+
+\begin{code}
+  \begin{minted}[samepage]{Python}
+  import pytest
+from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
+
+
+@pytest.fixture
+def kafka_adapter(server):
+    """Instantiate a KafkaAdapter object and return it as a fixture"""
+    adapter = KafkaAdapter(server.HOST, server.PORT)
+    yield adapter
+
+
+def test_should_return_topic_list(kafka_adapter):
+    topics = kafka_adapter.get_topics()
+    assert isinstance(topics, list)
+    assert all(topic in topics for topic in["test1","test2","test3"])
+
+
+  \end{minted}
+\end{code}
+
+Я сделал небольшую фикстуру, которая возвращает адаптер и после прохождения или провала теста его закрывает, это называется tear-down. Так же я написал тест, который проверяет количество и соответствие топиков реальной картине. В будущем сюда добавятся проверкии сообщений,
+
+Запустив тест и проверив, что он падает я приступил к кодингу. Структуру апдаптера задал я раньше, осталось заполнить содержимым. Почитав документацию confluent\_kafka нашел несколько способов подключения к кафке и примеры как работать с системой, на их основе я написал метод для вытаскивания топиков. В данный момент, это всего пара строк, которые возвращают только имена топиков в виде строк. Для теста этого достаточно, но позже я перепишу этот метод, чтобы он возвращал данные в виде внутреней модели (dataclass Topic), которая будет содержать не только имя, но и партишены, нагрузку, другие нужные данные 
+
+\newpage
+\begin{code}
+  \begin{minted}{Python}
+from abc import ABC, abstractmethod
+from confluent_kafka.admin import AdminClient
+from confluent_kafka import Consumer, KafkaException, TopicPartition
+from datetime import datetime, timedelta
+
+from typing import List
+
+import logging 
+
+class AbstractKafkaClusterAdapter(ABC):
+    @abstractmethod
+    def get_topics(self) -> List[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_messages(self, topic: str) -> List[str]:
+        raise NotImplementedError
+
+class KafkaAdapter(AbstractKafkaClusterAdapter):
+    def __init__(self, host: str, port: int):
+        self.admin_client = AdminClient({
+            "bootstrap.servers": f"{host}:{port}"
+        })
+    
+    def get_topics(self) -> List[str]:
+        topics = self.admin_client.list_topics(timeout=10).topics
+        return list(topics)
+  \end{minted}
+\end{code}
+
+Тест проходит, названия топиков возвращаются корректно, но есть небольшая проблема с тестированием. 
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/TestingTimings.png}
+  \end{center}
+  \caption{}\label{fig:}
+\end{figure}
+
+Метод, который я выбрал для заполнения кафки данными, из-за особенностей утилиты, работает extremly долго, и хоть это не влияет на продукт на прямую, это влияет на процесс разработки, я трачу минуту только на то чтобы протестриовать интеграцию, а при введении новых фичей приходится запускать тесты достаточно часто и в итоге вместо того чтобы кодить мне приходится ждать пока все соберется и протестируется. В ближайшем будущем нужно выбрать новый способ тестировать этот функционал, а пока я исключи интеграционные тесты из основного пайплайна и буду вызывать их только ручками при изменении адаптера
+
+\subsection{GUI: Topics}
+
+Подключение к кафке есть и данные получаются, запуск и настройка конфига есть, осталась самая главная часть, то что будет видить юзер. Начал я с urwid, создал несколько базовых классов, которые describe базовые entity, такие как панель, таблица, поисковик и так далее и раскидал их по экрану почти следуя дизайну. Это было трудно и заняло кучу времени т.к. у urwid устаревшая документация, но получилось как то так:
+
+\begin{code}
+  \begin{minted}{Python}
+  from typing import List
+from kandy_kafka.models import Topic
+
+import urwid
+import re
+
+import logging
+
+class TopicsView:
+    def __init__(self, controler):
+        self.controler = controler
+        self.elements = {
+            "topics_names": TopicsList(self),
+            "topic_data": TopicDataPanel()
+            }
+        self.columns = urwid.Columns([
+            ('weight', 1, self.elements["topics_names"].show()),
+            ('weight', 1.5, self.elements["topic_data"].show())
+        ], dividechars=1)
+
+    def update_topics_names(self, topics_names: List[str]):
+        self.elements["topics_names"].update_topics(topics_names)
+        self.show()
+
+    def get_topic(self, topic_name: str):
+        return self.controler.get_topic(topic_name)
+    
+    def show(self):
+        self.columns.contents[0] = (self.elements["topics_names"].show(), self.columns.options())
+        self.controler.loop.draw_screen()
+
+
+class TopicsList:
+    def __init__(self, parent_view) -> None:
+        self.parent_view = parent_view
+        
+        # Topics
+        self.topics_names = []
+        self.topics_list = urwid.SimpleFocusListWalker([])
+        
+        # Search Field
+        self.search_field = urwid.Edit('Search: ')
+        urwid.connect_signal(self.search_field, 'change', self.update_on_search)
+        self.search_text = ''
+        
+        # UI
+        self.listbox = self.FocusChangeListBox(self.topics_list, self.select_topic)
+        self.layout = urwid.LineBox(urwid.Pile([self.listbox]), tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')
+        self.last_focus = None
+        self.layout = urwid.Pile([('pack', urwid.LineBox(self.search_field, tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')), self.layout])
+
+    class FocusChangeListBox(urwid.ListBox):
+        def __init__(self, body, on_focus_changed):
+            super().__init__(body)
+            self.on_focus_changed = on_focus_changed
+
+        def keypress(self, size, key):
+            focus_widget, _ = self.get_focus()
+            key = super().keypress(size, key)
+            if self.get_focus() != (focus_widget, _):
+                self.on_focus_changed(None, None)
+            return key
+        
+    def filter_topics(self):
+        search_text = self.search_text
+        logging.info(f"Filtering topics with search text: {search_text}")
+        if search_text:
+            pattern = re.compile(search_text, re.IGNORECASE)
+        else:
+            pattern = re.compile('.*')
+        
+        self.topics_list.clear()
+        for topic_name in self.topics_names:
+            if pattern.search(topic_name):
+                selectable_item = urwid.SelectableIcon(topic_name, 100)
+                self.topics_list.append(urwid.AttrMap(selectable_item, None, focus_map='focused'))
+
+    def show(self):
+        self.filter_topics()
+        if self.last_focus is not None and self.last_focus < len(self.topics_list):
+            self.topics_list.set_focus(self.last_focus)
+        return self.layout
+    
+    def update_on_search(self, edit, new_edit_text):
+        logging.info(f"Search text changed to: {new_edit_text}")
+        self.search_text = new_edit_text
+        self.parent_view.show()
+            
+    def update_topics(self, topics_names: List[str] = None):
+        if topics_names is not None:
+            self.topics_names = topics_names
+
+    def get_selected_topic(self):
+        if self.last_focus is not None and self.last_focus < len(self.topics_list):
+            return self.topics_list[self.last_focus].get_text()[0]
+
+    def select_topic(self, button, user_data):
+        _, self.last_focus = self.topics_list.get_focus()
+
+
+class TopicDataPanel:
+    def __init__(self) -> None:
+        self.topic_data = urwid.Text('')
+        self.rounded_layout = urwid.LineBox(self.topic_data, tlcorner='╭', trcorner='╮', blcorner='╰', brcorner='╯')
+
+    def show(self):
+        return urwid.AttrMap(self.rounded_layout, "colored")
+
+    def update(self, topic: Topic):
+        data = {"name": topic.name,
+                "is_internal": topic.is_internal,
+                "Number of partitions": len(topic.partitions),
+                "Partitions": [partition.id for partition in topic.partitions]}
+        final_data = '\n'.join([f'{key}: {value}' for key, value in data.items()])
+        self.topic_data.set_text(final_data)
+
+  \end{minted}
+\end{code}
+
+Прежде чем подключать UI в основную систему я протестировал ее в отдельном локальном окне. Я захардкодил список топиков и посмотрел как UI будет реагировать на разные действия и в целом все работает хорошо кроме одной вещи. Я не смог отображать вещи в таблице, как бы я ни пытался кроме списка названий я не смог выводить информацию о топиках в любом другом формате.
+
+Я нашел библиотеку panwid, которая решала эту проблему, но она не запустилась в моем окружении из-за разницы версий с библиотекой pydantic, которая используется и в моем проекте и в этой библиотеке, так что пришлось от нее отказаться, как и от urwid и переключится на работу с textual.
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/UIFirstScreen.png}
+  \end{center}
+  \caption{}\label{fig:}
+\end{figure}
+
+\begin{code}
+  \begin{minted}{Python}
+import urwid
+
+import random
+import uuid
+from typing import List
+
+from panwid.datatable import DataTable, DataTableColumn, DataTableDivider
+
+
+class RoundedBox(urwid.LineBox):
+    def __init__(self, body):
+        super().__init__(body, tlcorner="╭", trcorner="╮", blcorner="╰", brcorner="╯")
+
+
+class HorizontalMenu(urwid.Padding):
+    def __init__(self):
+        menu = urwid.Columns(
+            [
+                urwid.SelectableIcon("Consumers"),
+                urwid.SelectableIcon("Topics"),
+                urwid.SelectableIcon("Brokers"),
+                urwid.SelectableIcon("Exit"),
+            ],
+        )
+        super().__init__(menu, left=2, right=100, min_width=100)
+
+
+class SearchBar(RoundedBox):
+    def __init__(self):
+        super().__init__(urwid.Edit("Search: "))
+
+
+class TopicsDataTable(RoundedBox):
+    def __init__(self, topics: List):
+        columns = [
+            DataTableColumn(
+                "topic",
+                "Topic",
+                width=("weight", 2),
+                align="center",
+                format_fn=lambda x: x.upper(),
+            ),
+            DataTableDivider("\N{BOX DRAWINGS DOUBLE VERTICAL}"),
+            DataTableColumn(
+                "partitions",
+                "Partitions",
+                align="center",
+                width=(13),
+            ),
+            DataTableDivider("\N{BOX DRAWINGS DOUBLE VERTICAL}"),
+            DataTableColumn(
+                "brokers",
+                "Brokers",
+                align="center",
+            ),
+            DataTableDivider("\N{BOX DRAWINGS DOUBLE VERTICAL}"),
+            DataTableColumn(
+                "size",
+                "Size",
+                align="center",
+            ),
+        ]
+        data = [
+            dict(topic=topic, partitions=partitions, brokers=brokers, size=size)
+            for topic, partitions, brokers, size in topics
+        ]
+        table = DataTable(
+            columns=columns,
+            data=data,
+            with_scrollbar=True,
+            sort_refocus=True,
+            cell_selection=True,
+        )
+        super().__init__(urwid.Frame(table))
+
+
+class TopicsList(urwid.Pile):
+    def __init__(self, topics: List):
+        super().__init__([("pack", SearchBar()), TopicsDataTable(topics)])
+
+
+class TopicDetail(RoundedBox):
+    def __init__(self, topic: str):
+        body = urwid.Filler(urwid.Text(topic), valign="top")
+        super().__init__(body)
+
+
+class TopicsView(urwid.Columns):
+    def __init__(self, topics: List):
+        super().__init__([TopicsList(topics), TopicDetail("Topic detatils")])
+
+
+class Main:
+    def __init__(self, topics: List):
+        palette = [
+            ("table_row_body", "", ""),
+            ("table_row_body focused", "white", "black"),
+            ("table_row_body column_focused", "", "black"),
+            ("table_row_body highlight", "", ""),
+            ("table_row_body highlight focused", "", "black"),
+            ("table_row_body highlight column_focused", "", "black"),
+            ("table_row_header", "", ""),
+            ("table_row_header focused", "", ""),
+            ("table_row_header column_focused", "", "black"),
+            ("table_row_header highlight", "", "yellow"),
+            ("table_row_header highlight focused", "", "yellow"),
+            ("table_row_header highlight column_focused", "", "yellow"),
+            ("table_row_footer", "", "white"),
+            ("table_row_footer focused", "", "dark gray"),
+            ("table_row_footer column_focused", "", "black"),
+            ("table_row_footer highlight", "", "yellow"),
+            ("table_row_footer highlight focused", "", "yellow"),
+            ("table_row_footer highlight column_focused", "", "yellow"),
+        ]
+        layout = urwid.Frame(body=TopicsView(topics), header=HorizontalMenu())
+        self.loop = urwid.MainLoop(layout, palette=palette)
+
+    def run(self):
+        self.loop.run()
+
+
+if __name__ == "__main__":
+    # random data
+    n = 100
+    topics = [
+        (
+            uuid.uuid4().hex,
+            random.randint(1, 10),
+            random.randint(1, 10),
+            random.randint(1, 10),
+        )
+        for _ in range(n)
+    ]
+    Main(topics).run()
+  \end{minted}
+\end{code}
+
+
+
+\subsection{Switching to textual}
 
 
 \appendix
-
 \chapter{System Design}\label{appendix:system_design}
 \begin{figure}[htpb]
     \centering

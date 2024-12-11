@@ -1,0 +1,50 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{+w}{    }\PYG{n+nt}{version}\PYG{p}{:}\PYG{+w}{ }\PYG{l+s}{\PYGZsq{}3.8\PYGZsq{}}
+
+\PYG{n+nt}{services}\PYG{p}{:}
+\PYG{+w}{  }\PYG{n+nt}{zookeeper}\PYG{p}{:}
+\PYG{+w}{      }\PYG{n+nt}{image}\PYG{p}{:}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}confluentinc/cp\PYGZhy{}zookeeper\PYGZdq{}}
+\PYG{+w}{      }\PYG{n+nt}{ports}\PYG{p}{:}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{32181:32181}
+\PYG{+w}{      }\PYG{n+nt}{environment}\PYG{p}{:}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{ZOOKEEPER\PYGZus{}CLIENT\PYGZus{}PORT=32181}
+
+\PYG{+w}{  }\PYG{n+nt}{kafka}\PYG{p}{:}
+\PYG{+w}{      }\PYG{n+nt}{image}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{confluentinc/cp\PYGZhy{}kafka}
+\PYG{+w}{      }\PYG{n+nt}{ports}\PYG{p}{:}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{9092:9092}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{29092:29092}
+\PYG{+w}{      }\PYG{n+nt}{healthcheck}\PYG{p}{:}
+\PYG{+w}{        }\PYG{n+nt}{test}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{nc \PYGZhy{}z localhost 9092 || exit \PYGZhy{}1}
+\PYG{+w}{        }\PYG{n+nt}{start\PYGZus{}period}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{15s}
+\PYG{+w}{        }\PYG{n+nt}{interval}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{5s}
+\PYG{+w}{        }\PYG{n+nt}{timeout}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{10s}
+\PYG{+w}{        }\PYG{n+nt}{retries}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{10}
+\PYG{+w}{      }\PYG{n+nt}{depends\PYGZus{}on}\PYG{p}{:}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{zookeeper}
+\PYG{+w}{      }\PYG{n+nt}{environment}\PYG{p}{:}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{KAFKA\PYGZus{}BROKER\PYGZus{}ID=1}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{KAFKA\PYGZus{}ZOOKEEPER\PYGZus{}CONNECT=zookeeper:32181}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{KAFKA\PYGZus{}ADVERTISED\PYGZus{}LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT\PYGZus{}HOST://localhost:29092}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{KAFKA\PYGZus{}LISTENER\PYGZus{}SECURITY\PYGZus{}PROTOCOL\PYGZus{}MAP = PLAINTEXT:PLAINTEXT,PLAINTEXT\PYGZus{}HOST:PLAINTEXT}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{KAFKA\PYGZus{}INTER\PYGZus{}BROKER\PYGZus{}LISTENER\PYGZus{}NAME = PLAINTEXT}
+\PYG{+w}{        }\PYG{p+pIndicator}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{KAFKA\PYGZus{}OFFSETS\PYGZus{}TOPIC\PYGZus{}REPLICATION\PYGZus{}FACTOR = 1}
+
+\PYG{+w}{  }\PYG{n+nt}{init\PYGZhy{}kafka}\PYG{p}{:}
+\PYG{+w}{    }\PYG{n+nt}{image}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{confluentinc/cp\PYGZhy{}kafka}
+\PYG{+w}{    }\PYG{n+nt}{depends\PYGZus{}on}\PYG{p}{:}
+\PYG{+w}{      }\PYG{n+nt}{kafka}\PYG{p}{:}
+\PYG{+w}{        }\PYG{n+nt}{condition}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{service\PYGZus{}healthy}
+\PYG{+w}{    }\PYG{n+nt}{entrypoint}\PYG{p}{:}\PYG{+w}{ }\PYG{p+pIndicator}{[}\PYG{l+s}{\PYGZdq{}/bin/sh\PYGZdq{}}\PYG{p+pIndicator}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}\PYGZhy{}c\PYGZdq{}}\PYG{p+pIndicator}{]}
+\PYG{+w}{    }\PYG{n+nt}{command}\PYG{p}{:}\PYG{+w}{ }\PYG{p+pIndicator}{|}
+\PYG{+w}{      }\PYG{n+no}{\PYGZdq{}}
+\PYG{+w}{      }\PYG{n+no}{\PYGZsh{} blocks until kafka is reachable}
+\PYG{+w}{      }\PYG{n+no}{kafka\PYGZhy{}topics \PYGZhy{}\PYGZhy{}bootstrap\PYGZhy{}server kafka:9092 \PYGZhy{}\PYGZhy{}list}
+\PYG{+w}{      }\PYG{n+no}{echo \PYGZhy{}e \PYGZsq{}Creating kafka topics\PYGZsq{}}
+\PYG{+w}{      }\PYG{n+no}{kafka\PYGZhy{}topics \PYGZhy{}\PYGZhy{}bootstrap\PYGZhy{}server kafka:9092 \PYGZhy{}\PYGZhy{}create \PYGZhy{}\PYGZhy{}if\PYGZhy{}not\PYGZhy{}exists \PYGZhy{}\PYGZhy{}topic test \PYGZhy{}\PYGZhy{}replication\PYGZhy{}factor 1 \PYGZhy{}\PYGZhy{}partitions 1}
+\PYG{+w}{      }\PYG{n+no}{kafka\PYGZhy{}topics \PYGZhy{}\PYGZhy{}bootstrap\PYGZhy{}server kafka:9092 \PYGZhy{}\PYGZhy{}create \PYGZhy{}\PYGZhy{}if\PYGZhy{}not\PYGZhy{}exists \PYGZhy{}\PYGZhy{}topic test2 \PYGZhy{}\PYGZhy{}replication\PYGZhy{}factor 1 \PYGZhy{}\PYGZhy{}partitions 1}
+\PYG{+w}{      }\PYG{n+no}{echo \PYGZhy{}e \PYGZsq{}Successfully created the following topics:\PYGZsq{}}
+\PYG{+w}{      }\PYG{n+no}{kafka\PYGZhy{}topics \PYGZhy{}\PYGZhy{}bootstrap\PYGZhy{}server kafka:9092 \PYGZhy{}\PYGZhy{}list}
+\PYG{+w}{      }\PYG{n+no}{\PYGZdq{}}
+
+\end{Verbatim}

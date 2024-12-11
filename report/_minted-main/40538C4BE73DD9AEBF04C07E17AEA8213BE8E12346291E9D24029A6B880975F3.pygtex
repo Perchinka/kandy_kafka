@@ -1,0 +1,136 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{urwid}
+
+\PYG{k+kn}{import} \PYG{n+nn}{random}
+\PYG{k+kn}{import} \PYG{n+nn}{uuid}
+\PYG{k+kn}{from} \PYG{n+nn}{typing} \PYG{k+kn}{import} \PYG{n}{List}
+
+\PYG{k+kn}{from} \PYG{n+nn}{panwid.datatable} \PYG{k+kn}{import} \PYG{n}{DataTable}\PYG{p}{,} \PYG{n}{DataTableColumn}\PYG{p}{,} \PYG{n}{DataTableDivider}
+
+
+\PYG{k}{class} \PYG{n+nc}{RoundedBox}\PYG{p}{(}\PYG{n}{urwid}\PYG{o}{.}\PYG{n}{LineBox}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{body}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n}{body}\PYG{p}{,} \PYG{n}{tlcorner}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}╭\PYGZdq{}}\PYG{p}{,} \PYG{n}{trcorner}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}╮\PYGZdq{}}\PYG{p}{,} \PYG{n}{blcorner}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}╰\PYGZdq{}}\PYG{p}{,} \PYG{n}{brcorner}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}╯\PYGZdq{}}\PYG{p}{)}
+
+
+\PYG{k}{class} \PYG{n+nc}{HorizontalMenu}\PYG{p}{(}\PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Padding}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{menu} \PYG{o}{=} \PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Columns}\PYG{p}{(}
+            \PYG{p}{[}
+                \PYG{n}{urwid}\PYG{o}{.}\PYG{n}{SelectableIcon}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Consumers\PYGZdq{}}\PYG{p}{),}
+                \PYG{n}{urwid}\PYG{o}{.}\PYG{n}{SelectableIcon}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Topics\PYGZdq{}}\PYG{p}{),}
+                \PYG{n}{urwid}\PYG{o}{.}\PYG{n}{SelectableIcon}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Brokers\PYGZdq{}}\PYG{p}{),}
+                \PYG{n}{urwid}\PYG{o}{.}\PYG{n}{SelectableIcon}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Exit\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{],}
+        \PYG{p}{)}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n}{menu}\PYG{p}{,} \PYG{n}{left}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{right}\PYG{o}{=}\PYG{l+m+mi}{100}\PYG{p}{,} \PYG{n}{min\PYGZus{}width}\PYG{o}{=}\PYG{l+m+mi}{100}\PYG{p}{)}
+
+
+\PYG{k}{class} \PYG{n+nc}{SearchBar}\PYG{p}{(}\PYG{n}{RoundedBox}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Edit}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Search: \PYGZdq{}}\PYG{p}{))}
+
+
+\PYG{k}{class} \PYG{n+nc}{TopicsDataTable}\PYG{p}{(}\PYG{n}{RoundedBox}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{topics}\PYG{p}{:} \PYG{n}{List}\PYG{p}{):}
+        \PYG{n}{columns} \PYG{o}{=} \PYG{p}{[}
+            \PYG{n}{DataTableColumn}\PYG{p}{(}
+                \PYG{l+s+s2}{\PYGZdq{}topic\PYGZdq{}}\PYG{p}{,}
+                \PYG{l+s+s2}{\PYGZdq{}Topic\PYGZdq{}}\PYG{p}{,}
+                \PYG{n}{width}\PYG{o}{=}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}weight\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{),}
+                \PYG{n}{align}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}center\PYGZdq{}}\PYG{p}{,}
+                \PYG{n}{format\PYGZus{}fn}\PYG{o}{=}\PYG{k}{lambda} \PYG{n}{x}\PYG{p}{:} \PYG{n}{x}\PYG{o}{.}\PYG{n}{upper}\PYG{p}{(),}
+            \PYG{p}{),}
+            \PYG{n}{DataTableDivider}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}N\PYGZob{}BOX DRAWINGS DOUBLE VERTICAL\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{),}
+            \PYG{n}{DataTableColumn}\PYG{p}{(}
+                \PYG{l+s+s2}{\PYGZdq{}partitions\PYGZdq{}}\PYG{p}{,}
+                \PYG{l+s+s2}{\PYGZdq{}Partitions\PYGZdq{}}\PYG{p}{,}
+                \PYG{n}{align}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}center\PYGZdq{}}\PYG{p}{,}
+                \PYG{n}{width}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{13}\PYG{p}{),}
+            \PYG{p}{),}
+            \PYG{n}{DataTableDivider}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}N\PYGZob{}BOX DRAWINGS DOUBLE VERTICAL\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{),}
+            \PYG{n}{DataTableColumn}\PYG{p}{(}
+                \PYG{l+s+s2}{\PYGZdq{}brokers\PYGZdq{}}\PYG{p}{,}
+                \PYG{l+s+s2}{\PYGZdq{}Brokers\PYGZdq{}}\PYG{p}{,}
+                \PYG{n}{align}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}center\PYGZdq{}}\PYG{p}{,}
+            \PYG{p}{),}
+            \PYG{n}{DataTableDivider}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}N\PYGZob{}BOX DRAWINGS DOUBLE VERTICAL\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{),}
+            \PYG{n}{DataTableColumn}\PYG{p}{(}
+                \PYG{l+s+s2}{\PYGZdq{}size\PYGZdq{}}\PYG{p}{,}
+                \PYG{l+s+s2}{\PYGZdq{}Size\PYGZdq{}}\PYG{p}{,}
+                \PYG{n}{align}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}center\PYGZdq{}}\PYG{p}{,}
+            \PYG{p}{),}
+        \PYG{p}{]}
+        \PYG{n}{data} \PYG{o}{=} \PYG{p}{[}
+            \PYG{n+nb}{dict}\PYG{p}{(}\PYG{n}{topic}\PYG{o}{=}\PYG{n}{topic}\PYG{p}{,} \PYG{n}{partitions}\PYG{o}{=}\PYG{n}{partitions}\PYG{p}{,} \PYG{n}{brokers}\PYG{o}{=}\PYG{n}{brokers}\PYG{p}{,} \PYG{n}{size}\PYG{o}{=}\PYG{n}{size}\PYG{p}{)}
+            \PYG{k}{for} \PYG{n}{topic}\PYG{p}{,} \PYG{n}{partitions}\PYG{p}{,} \PYG{n}{brokers}\PYG{p}{,} \PYG{n}{size} \PYG{o+ow}{in} \PYG{n}{topics}
+        \PYG{p}{]}
+        \PYG{n}{table} \PYG{o}{=} \PYG{n}{DataTable}\PYG{p}{(}
+            \PYG{n}{columns}\PYG{o}{=}\PYG{n}{columns}\PYG{p}{,}
+            \PYG{n}{data}\PYG{o}{=}\PYG{n}{data}\PYG{p}{,}
+            \PYG{n}{with\PYGZus{}scrollbar}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{,}
+            \PYG{n}{sort\PYGZus{}refocus}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{,}
+            \PYG{n}{cell\PYGZus{}selection}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{,}
+        \PYG{p}{)}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Frame}\PYG{p}{(}\PYG{n}{table}\PYG{p}{))}
+
+
+\PYG{k}{class} \PYG{n+nc}{TopicsList}\PYG{p}{(}\PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Pile}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{topics}\PYG{p}{:} \PYG{n}{List}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{([(}\PYG{l+s+s2}{\PYGZdq{}pack\PYGZdq{}}\PYG{p}{,} \PYG{n}{SearchBar}\PYG{p}{()),} \PYG{n}{TopicsDataTable}\PYG{p}{(}\PYG{n}{topics}\PYG{p}{)])}
+
+
+\PYG{k}{class} \PYG{n+nc}{TopicDetail}\PYG{p}{(}\PYG{n}{RoundedBox}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{topic}\PYG{p}{:} \PYG{n+nb}{str}\PYG{p}{):}
+        \PYG{n}{body} \PYG{o}{=} \PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Filler}\PYG{p}{(}\PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Text}\PYG{p}{(}\PYG{n}{topic}\PYG{p}{),} \PYG{n}{valign}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}top\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n}{body}\PYG{p}{)}
+
+
+\PYG{k}{class} \PYG{n+nc}{TopicsView}\PYG{p}{(}\PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Columns}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{topics}\PYG{p}{:} \PYG{n}{List}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{([}\PYG{n}{TopicsList}\PYG{p}{(}\PYG{n}{topics}\PYG{p}{),} \PYG{n}{TopicDetail}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Topic detatils\PYGZdq{}}\PYG{p}{)])}
+
+
+\PYG{k}{class} \PYG{n+nc}{Main}\PYG{p}{:}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{topics}\PYG{p}{:} \PYG{n}{List}\PYG{p}{):}
+        \PYG{n}{palette} \PYG{o}{=} \PYG{p}{[}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}body\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}body focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}white\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}black\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}body column\PYGZus{}focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}black\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}body highlight\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}body highlight focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}black\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}body highlight column\PYGZus{}focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}black\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}header\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}header focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}header column\PYGZus{}focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}black\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}header highlight\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}yellow\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}header highlight focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}yellow\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}header highlight column\PYGZus{}focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}yellow\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}footer\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}white\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}footer focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}dark gray\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}footer column\PYGZus{}focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}black\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}footer highlight\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}yellow\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}footer highlight focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}yellow\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}table\PYGZus{}row\PYGZus{}footer highlight column\PYGZus{}focused\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}yellow\PYGZdq{}}\PYG{p}{),}
+        \PYG{p}{]}
+        \PYG{n}{layout} \PYG{o}{=} \PYG{n}{urwid}\PYG{o}{.}\PYG{n}{Frame}\PYG{p}{(}\PYG{n}{body}\PYG{o}{=}\PYG{n}{TopicsView}\PYG{p}{(}\PYG{n}{topics}\PYG{p}{),} \PYG{n}{header}\PYG{o}{=}\PYG{n}{HorizontalMenu}\PYG{p}{())}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{loop} \PYG{o}{=} \PYG{n}{urwid}\PYG{o}{.}\PYG{n}{MainLoop}\PYG{p}{(}\PYG{n}{layout}\PYG{p}{,} \PYG{n}{palette}\PYG{o}{=}\PYG{n}{palette}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{loop}\PYG{o}{.}\PYG{n}{run}\PYG{p}{()}
+
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZdq{}}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} random data}
+    \PYG{n}{n} \PYG{o}{=} \PYG{l+m+mi}{100}
+    \PYG{n}{topics} \PYG{o}{=} \PYG{p}{[}
+        \PYG{p}{(}
+            \PYG{n}{uuid}\PYG{o}{.}\PYG{n}{uuid4}\PYG{p}{()}\PYG{o}{.}\PYG{n}{hex}\PYG{p}{,}
+            \PYG{n}{random}\PYG{o}{.}\PYG{n}{randint}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{),}
+            \PYG{n}{random}\PYG{o}{.}\PYG{n}{randint}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{),}
+            \PYG{n}{random}\PYG{o}{.}\PYG{n}{randint}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{),}
+        \PYG{p}{)}
+        \PYG{k}{for} \PYG{n}{\PYGZus{}} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{n}\PYG{p}{)}
+    \PYG{p}{]}
+    \PYG{n}{Main}\PYG{p}{(}\PYG{n}{topics}\PYG{p}{)}\PYG{o}{.}\PYG{n}{run}\PYG{p}{()}
+\end{Verbatim}
