@@ -1,0 +1,59 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+Screen \PYGZob{}
+    layout: horizontal;
+\PYGZcb{}
+
+\PYGZsh{}center\PYGZhy{}pane \PYGZob{}
+  height: 100\PYGZpc{};
+  width: 1fr;
+  background: \PYGZdl{}background;
+  border: round green;
+\PYGZcb{}
+
+\PYGZsh{}topics\PYGZhy{}table\PYGZob{}
+  border: round green;
+  margin: 0 0 1 0;
+  width: 1fr;
+  height: 95\PYGZpc{};
+  opacity: 90\PYGZpc{};
+\PYGZcb{}
+
+\PYGZsh{}topics\PYGZhy{}table:focus\PYGZob{}
+opacity: 100\PYGZpc{};
+\PYGZcb{}
+
+\PYGZsh{}messages\PYGZhy{}table\PYGZob{}
+  border: round green;
+  margin: 0 0 1 0;
+  width: 1fr;
+  height: 95\PYGZpc{};
+  opacity: 90\PYGZpc{};
+\PYGZcb{}
+
+\PYGZsh{}messages\PYGZhy{}table:focus\PYGZob{}
+opacity: 100\PYGZpc{};
+\PYGZcb{}
+
+\PYGZsh{}sidebar\PYGZob{}
+  dock: left;
+  width: 20;
+  height: 100\PYGZpc{};
+  background: \PYGZdl{}background;
+  border: round green;
+  opacity: 80\PYGZpc{};
+\PYGZcb{}
+
+\PYGZsh{}sidebar:focus\PYGZob{}
+opacity: 100\PYGZpc{};
+\PYGZcb{}
+
+Input\PYGZob{}
+  border: round green;
+  background: \PYGZdl{}background;
+  opacity: 90\PYGZpc{};
+\PYGZcb{}
+
+Input:focus\PYGZob{}
+  opacity: 100\PYGZpc{};
+\PYGZcb{}
+\end{Verbatim}

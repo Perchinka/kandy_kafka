@@ -1,0 +1,27 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} kandy\PYGZus{}kafka/domain/models.py}
+
+\PYG{k+kn}{from} \PYG{n+nn}{typing} \PYG{k+kn}{import} \PYG{n}{List}\PYG{p}{,} \PYG{n}{Optional}
+\PYG{k+kn}{from} \PYG{n+nn}{confluent\PYGZus{}kafka} \PYG{k+kn}{import} \PYG{n}{Uuid}
+\PYG{k+kn}{from} \PYG{n+nn}{pydantic} \PYG{k+kn}{import} \PYG{n}{BaseModel}
+
+
+\PYG{k}{class} \PYG{n+nc}{Partition}\PYG{p}{(}\PYG{n}{BaseModel}\PYG{p}{):}
+    \PYG{n}{topic\PYGZus{}name}\PYG{p}{:} \PYG{n+nb}{str}
+    \PYG{n+nb}{id}\PYG{p}{:} \PYG{n+nb}{int}
+
+
+\PYG{k}{class} \PYG{n+nc}{Topic}\PYG{p}{(}\PYG{n}{BaseModel}\PYG{p}{):}
+    \PYG{n+nb}{id}\PYG{p}{:} \PYG{n}{Uuid}  \PYG{c+c1}{\PYGZsh{} confluent\PYGZus{}kafka Uuid}
+    \PYG{n}{name}\PYG{p}{:} \PYG{n+nb}{str}
+    \PYG{n}{is\PYGZus{}internal}\PYG{p}{:} \PYG{n+nb}{bool}
+    \PYG{n}{partitions}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n}{Partition}\PYG{p}{]}
+    \PYG{n}{amount\PYGZus{}of\PYGZus{}messages}\PYG{p}{:} \PYG{n+nb}{int}
+
+    \PYG{k}{class} \PYG{n+nc}{Config}\PYG{p}{:}
+        \PYG{n}{arbitrary\PYGZus{}types\PYGZus{}allowed} \PYG{o}{=} \PYG{k+kc}{True}
+
+
+\PYG{k}{class} \PYG{n+nc}{Message}\PYG{p}{(}\PYG{n}{BaseModel}\PYG{p}{):}
+    \PYG{k}{pass}
+\end{Verbatim}

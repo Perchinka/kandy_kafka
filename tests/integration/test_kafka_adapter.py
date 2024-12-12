@@ -83,10 +83,8 @@ def test_should_return_topic_list(kafka_adapter, create_test_topic):
     """
     Test if KafkaAdapter returns a list of topics after auto-producing messages to a new topic.
     """
-    # Create a topic with messages
     topic_name = create_test_topic(num_messages=10)
 
-    # Fetch topics from the KafkaAdapter
     topics = kafka_adapter.get_topics()
 
     assert isinstance(topics, list)
@@ -103,7 +101,6 @@ def test_should_return_10_messages_from_topic_with_10_messages(
     # Create a topic with exactly 10 messages
     topic_name = create_test_topic(num_messages=10)
 
-    # Fetch messages from the KafkaAdapter
     messages = kafka_adapter.get_messages(topic_name)
 
     assert isinstance(messages, list)

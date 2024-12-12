@@ -1,0 +1,5 @@
+    bootstraped = Bootstrap()(
+        clustername=args.clustername, host=args.host, port=args.port
+    )
+
+    bootstraped.kafka_adapter.consumer.close()

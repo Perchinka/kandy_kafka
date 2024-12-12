@@ -1,0 +1,6 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+      \PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.gui.controller} \PYG{k+kn}{import} \PYG{n}{Controller}
+
+      \PYG{n}{controller} \PYG{o}{=} \PYG{n}{Controller}\PYG{p}{(}\PYG{n}{Bootstrap}\PYG{o}{.}\PYG{n}{bootstraped}\PYG{p}{)}
+      \PYG{n}{controller}\PYG{o}{.}\PYG{n}{run}\PYG{p}{()}
+\end{Verbatim}

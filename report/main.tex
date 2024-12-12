@@ -2,7 +2,6 @@
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 % \usepackage[T2A,T1]{fontenc}
 \usepackage{silence}
-
 \usepackage{pmboxdraw}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -2067,16 +2066,19 @@ class TopicDataPanel:
   \end{minted}
 \end{code}
 
-Прежде чем подключать UI в основную систему я протестировал ее в отдельном локальном окне. Я захардкодил список топиков и посмотрел как UI будет реагировать на разные действия и в целом все работает хорошо кроме одной вещи. Я не смог отображать вещи в таблице, как бы я ни пытался кроме списка названий я не смог выводить информацию о топиках в любом другом формате.
+Прежде чем подключать UI в основную систему я протестировал ее в отдельном локальном окне. Я захардкодил список топиков и посмотрел как UI будет реагировать на разные действия и в целом все работает хорошо кроме одной вещи. 
 
-Я нашел библиотеку panwid, которая решала эту проблему, но она не запустилась в моем окружении из-за разницы версий с библиотекой pydantic, которая используется и в моем проекте и в этой библиотеке, так что пришлось от нее отказаться, как и от urwid и переключится на работу с textual.
-
+\newpage
 \begin{figure}[htbp]
   \begin{center}
     \includegraphics[width=0.95\textwidth]{imgs/UIFirstScreen.png}
   \end{center}
   \caption{}\label{fig:}
 \end{figure}
+
+Я не смог настроить отображение не списком, а таблицой, и urwid не поддерживает такое нативно. Пока решал проблему, я нашел библиотеку panwid, которая содержит несколько виджетов, но она не запустилась в моем окружении из-за разницы версий с библиотекой pydantic, которая используется и в моем проекте и в этой библиотеке, так что пришлось от нее отказаться, как и от urwid и переключится на работу с textual, т.к. это показалось мне проще.
+
+Ниже пример кода, который я написал для проверки работаспособности функционала таблиц
 
 \begin{code}
   \begin{minted}{Python}
@@ -2217,9 +2219,523 @@ if __name__ == "__main__":
   \end{minted}
 \end{code}
 
-
-
 \subsection{Switching to textual}
+
+Textual мне понравился своей документацие и подходом к разработке, мне не нужно думать о "низкоуровневом" функционале, когда я работаю с виджетами, я могу просто комбинировать виджиты и вызывать что-то вроде прерыаний, которые буду обрабатывать в другом месте, это удобно.
+
+Поэксперементировав с textual я решил немного отклониться от view-control системы и дать небольшую свободу вьюшке. В реальном продукте я бы продолжил предерживаться MVC, ведь хоть это и трудно сейчас, но в будущем время кодинга окупается при таком подходе, ведь на дебаг и ревью я трачу гораздо меньше времени. Но я делаю MVP для coursework, и сейчас важно, чтобы код заработал и был в целом читаем, но не обязательно идеален.
+
+Вот так вот я переписал код с urwid на textual, и код получился гораздо аккуратнее, так же начал потихоньку добавлять коментарии.
+
+\begin{code}
+  \begin{minted}{Python}
+# kandy_kafka/gui/views/topics.py
+  
+from textual.widgets import DataTable, Header, Footer
+from textual.containers import Container
+from textual.app import ComposeResult
+
+
+class TopicsView(Container):
+    """View to display topics in a table."""
+
+    def __init__(self):
+        super().__init__()
+        self.table = DataTable()
+
+    def build_table(self, topics: list[str]):
+        """Build the DataTable widget to display the topics."""
+        self.table.clear()
+        self.table.add_column("Topics")
+        for topic in topics:
+            self.table.add_row(topic)
+
+    def compose(self) -> ComposeResult:
+        """Compose the view with the table."""
+        yield Header()
+        yield self.table
+        yield Footer()
+
+  \end{minted}
+\end{code}
+
+В textual изначально был компонент называющийся DataTable, что в разы упростило жизнь, заодно в библиотеке присутствует куча полезных и кастомизируемых виджетов, таких как footer и header, то что мне пришлось писать в urwid самому, без документации и читая/меняя исходный код библиотеки чтобы починить несколько багов, в этой библиотеке реализовано в очень красивом и удобном виде.
+
+Далее я решил сразу интегрировать UI с остальным кодом и переписал controller. 
+
+\begin{code}
+  \begin{minted}[samepage]{Python}
+# kandy_kafka/gui/controller.py
+
+# The code block below is needed to avoid a cyclic import error, while using Bootstrap class for type-hinting
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from kandy_kafka.bootstrap import Bootstraped
+
+from textual.app import App, ComposeResult
+from kandy_kafka.gui.views import TopicsView
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from kandy_kafka.bootstrap import Bootstraped
+
+
+class Controller(App):
+    """Main application controller"""
+
+    BINDINGS = [("f", "fetch", "fetch")]
+    CSS_PATH = "app.tcss"  # Textual CSS file for styling
+
+    def __init__(self, bootstraped: Bootstraped):
+        super().__init__()
+        self.bootstrapped = bootstraped
+        self.kafka_adapter = self.bootstrapped.kafka_adapter
+        self.view = TopicsView()  # Instantiate the TopicsView from views.py
+
+    async def reload_topics(self):
+        """
+        Reload the topics by pulling them from the KafkaModel and updating the TopicsView.
+        """
+        topics = self.kafka_adapter.get_topics()  # Fetch topics from Kafka
+        self.view.build_table(topics)  # Update the table in the view
+
+    async def action_fetch(self) -> None:
+        """Handle the message to reload topics."""
+        await self.reload_topics()
+
+    def compose(self) -> ComposeResult:
+        """Compose the app layout."""
+        yield self.view  # Adds the TopicsView (table)
+
+  \end{minted}
+\end{code}
+
+Textual имеет несколько полезных фичей, например биндинги и CSS-like стили, применяемые к приложению, пока что они пустые, но в будущем я точно с ними поиграюсь и сделаю что-то более или менее красивое 
+
+Контроллер сейчас имеет одну основную функцию - reload\_topics, которая как раз вытягивает данные из кафки и отображает их в виде таблицы (Пока что из одной колонки-имени топика) action\_\texttt{fetch} срабатывает по нажатию bind, в нашем случае это 'f'. Бинды задаются в переменной BINDINGS = [("f", "fetch", "fetch")], в будущем можно добавить usability feature для конфигурации клавиш быстрого доступа 
+
+В бутстрап я добавил всего пару строчек, а именно импортирование и инициализация контроллера
+
+\begin{code}
+  \begin{minted}{Python}
+      from kandy_kafka.gui.controller import Controller
+      
+      controller = Controller(Bootstrap.bootstraped)
+      controller.run()
+  \end{minted}
+\end{code}
+Eще я начал эксперементировать с вытягиванием сообщений, но об этом позже, т.к. там возникли определенные трудности. И это были все изменения на этот момент
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/TextualFirstScreen.png}
+  \end{center}
+  \caption{}\label{fig:}
+\end{figure}
+
+При запуске утилиты появлялось вот такое вот окно и по нажатию f оно вытягивало топики из Кафки, что мне и было нужно. В данный момент никаких фильтров нет и вытягиваются как системные, так и "users'" топики. Еще выявил критический баг, но пока не знаю как пофиксить и откладываю на потом
+
+Баг заключается в том, что если сервер с кафкой не запущен (Или его нет на хосте), то при подключении вместо Exception confluent\_kafka начинает писать прямо в stdout ошибку и пытаться подключиться снова и снова, при этом нельзя просто нажать ctrl-C(Быстрая остановка приложения в линуксе) и выйти в терминал, т.к. приложение перестает регировать на ввод при этой ошибке. 
+\newpage
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/BrokerConnectionError.png}
+  \end{center}
+  \caption{}\label{fig:}
+\end{figure}
+
+В целом для MVP может и не очень критично, но для реального продукта с такой ошибкой нельзя выпускать приложение в продакшен. Нужно делать обертку, которая будет перед подключением пинговать сервер и проверять наличие кафки по порту, который предоставил пользователь, а в идеале вообще выкидывать моментально ошибку, но в документации confluent\_kafka я не нашел упоминания о том как это сделать в их библиотеке 
+
+\subsection{Finish line}
+
+Я не стал указывать все иттерации, через которые пришлось пройти чтобы дойти до финального результата, но я выделил и осветил в этой секции несколько мажор багов и просто проблем, с которыми я столкнулся в ходе разработки
+
+На самом деле пологал, что с поиском по топикам будут проблемы и откладывал долго имплементацию этой фичи, но как оказалось regex очень хорошо справляется с задачей, а textual дает классный интерфейс для работы с data-таблицами, и в итоге мне оставалось только написать подходящий regex и разобраться с комбинацией методов сортировки, что было не так сложно.
+
+\begin{code}
+  \begin{minted}{Python}
+    def compose(self) -> ComposeResult:
+        """Compose the view with the table."""
+        yield Horizontal(
+            Vertical(
+                ListView(
+                    ListItem(Label("Brokers")),
+                    ListItem(Label("Topics")),
+                    ListItem(Label("Consumers")),
+                ),
+                id="navigation-pane",
+            ),
+            Vertical(
+                Input(placeholder="Search Topics...", id="search-field"),
+                self.table,
+                id="center-pane",
+            ),
+        )
+
+    current_sorts: set = set()
+
+    def sort_reverse(self, sort_type: str):
+        """Determine if `sort_type` is ascending or descending."""
+        reverse = sort_type in self.current_sorts
+        if reverse:
+            self.current_sorts.remove(sort_type)
+        else:
+            self.current_sorts.add(sort_type)
+        return reverse
+
+    def action_sort_by_size(self) -> None:
+        table = self.query_one(DataTable)
+        table.sort(
+            "Size",
+            key=lambda x: x,
+            reverse=self.sort_reverse("Size"),
+        )
+
+    def action_sort_by_partitions(self) -> None:
+        table = self.query_one(DataTable)
+        table.sort(
+            "Partitions", key=lambda x: int(x), reverse=self.sort_reverse("Partitions")
+        )
+
+    async def on_input_changed(self, event):
+        """Called whenever the input in the search field changes."""
+        search_query = event.value.strip()
+
+        if search_query == "":
+            # If the search query is empty, show all topics
+            self.filtered_topics = self.topics
+        else:
+            # Use regex to filter topics based on search query
+            self.filtered_topics = [
+                topic
+                for topic in self.topics
+                if re.search(search_query, topic.name, re.IGNORECASE)
+            ]
+
+        self.update_table(self.filtered_topics)
+  \end{minted}
+\end{code}
+
+В итоге в topics.py я добавил несколько новых методов, которые помогали с сортировкой и изменил layout. Я сделал search на чем-то вроде прерываний, на каждом изменении символа вызывается event, который потом асинхроно ловится и меняет вывод в зависимости от того, что уже написанно в поле "поиск".
+
+Далее было самое сложное, работа с сообщениями. Как всегда, первым делом я написал тесты (И немного изменил тест топиков)
+
+\begin{code}
+  \begin{minted}{Python}
+import pytest
+from kandy_kafka.adapters.kafka_adapter import KafkaAdapter
+from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka import Consumer, Message, Producer
+
+from kandy_kafka.domain.models import Topic
+
+
+@pytest.fixture
+def kafka_adapter(server):
+    """Instantiate a KafkaAdapter object and return it as a fixture"""
+    adapter = KafkaAdapter(server.HOST, server.PORT)
+    yield adapter
+
+
+def test_should_return_topic_list(kafka_adapter):
+    topics = kafka_adapter.get_topics()
+    assert isinstance(topics, list)
+    assert isinstance(topics[0], Topic)
+    assert all(
+        name in [topic.name for topic in topics] for name in ["test1", "test2", "test3"]
+    )
+
+
+def test_should_return_10_messages_from_topic(kafka_adapter):
+    messages = kafka_adapter.get_messages("test1")
+    assert isinstance(messages, list)
+    assert len(messages) == 10
+    assert all(isinstance(message, Message) for message in messages)
+
+
+def test_should_return_50_messages_from_topic_with_100_messages(kafka_adapter):
+    messages = kafka_adapter.get_messages("test2")
+    assert isinstance(messages, list)
+    assert len(messages) == 50
+    assert all(isinstance(message, Message) for message in messages)
+  \end{minted}
+\end{code}
+
+Далее я добавил модели для топика партишена и модели, т.к. раз таблица работает, почему бы ее не заполнять данными? 
+
+\begin{code}
+  \begin{minted}{Python}
+# kandy_kafka/domain/models.py
+
+from typing import List, Optional
+from confluent_kafka import Uuid
+from pydantic import BaseModel
+
+
+class Partition(BaseModel):
+    topic_name: str
+    id: int
+
+
+class Topic(BaseModel):
+    id: Uuid  # confluent_kafka Uuid
+    name: str
+    is_internal: bool
+    partitions: List[Partition]
+    amount_of_messages: int
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Message(BaseModel):
+    pass
+  \end{minted}
+\end{code}
+
+После этого я принялся за адптер, переписал метод для вытягивания данных по топикам, т.к. мне нужно было тянуть теперь не только имена, но и другие данные и потом написал метод для работы с сообщениями
+
+\begin{code}
+  \begin{minted}{Python}
+from abc import ABC, abstractmethod
+import logging
+import confluent_kafka
+from confluent_kafka.admin import AdminClient, TopicDescription
+from confluent_kafka import (
+    Consumer,
+    KafkaException,
+    KafkaError,
+    Message,
+    TopicCollection,
+)
+from typing import List
+from kandy_kafka.domain.models import Topic, Partition, Message
+
+
+class AbstractKafkaClusterAdapter(ABC):
+    @abstractmethod
+    def get_topics(self) -> List[Topic]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_messages(self, topic: str) -> List[str]:
+        raise NotImplementedError
+
+
+class KafkaAdapter(AbstractKafkaClusterAdapter):
+    def __init__(self, host: str, port: int):
+        self.admin_client = AdminClient({"bootstrap.servers": f"{host}:{port}"})
+        self.consumer: Consumer = Consumer(
+            {
+                "bootstrap.servers": f"{host}:{port}",
+                "group.id": "kandy",
+                "auto.offset.reset": "earliest",
+            }
+        )
+
+    @staticmethod
+    def on_assign(consumer: Consumer, partitions):
+        for partition in partitions:
+            partition.offset = confluent_kafka.OFFSET_BEGINNING
+        consumer.assign(partitions)
+
+    def get_topics(self) -> List[Topic]:
+        metadata = self.admin_client.list_topics(timeout=10)
+        topics = self.admin_client.describe_topics(
+            TopicCollection(list(metadata.topics))
+        )
+
+        result = []
+        for _, feature in topics.items():
+            topic: TopicDescription = feature.result()
+            total_messages = 0
+
+            partitions: List[Partition] = []
+            for partition_metadata in topic.partitions:
+                partition = Partition(topic_name=topic.name, id=partition_metadata.id)
+                partitions.append(partition)
+
+                # Getting partition by id
+                topic_partition = confluent_kafka.TopicPartition(
+                    topic.name, partition_metadata.id
+                )
+
+                # Amount_of_messages in the topic = the latest offset - the earliest one
+                low, high = self.consumer.get_watermark_offsets(topic_partition)
+                partition_message_count = high - low
+                total_messages += partition_message_count
+
+            result.append(
+                Topic(
+                    id=topic.topic_id,
+                    name=topic.name,
+                    is_internal=topic.is_internal,
+                    partitions=partitions,
+                    amount_of_messages=total_messages,
+                )
+            )
+
+        return result
+
+    def get_messages(self, topic: str) -> List[str]:
+        metadata = self.consumer.list_topics(topic, timeout=10)
+        if metadata.topics[topic].error is not None:
+            raise KafkaException(metadata.topics[topic].error)
+
+        running = True
+
+        messages: List[Message] = []
+
+        self.consumer.subscribe([topic], on_assign=self.on_assign)
+        while running:
+            # Timeout isn't reliable though. # TODO Find a better way to handle connection
+            msg = self.consumer.poll(timeout=10)
+            # TODO change 50 to custom config param, smth like messages per page
+            if msg is None or len(messages) >= 50:
+                running = False
+                continue
+            if msg.error():
+                if msg.error().code() == KafkaError._PARTITION_EOF:
+                    continue
+                else:
+                    logging.error(f"Error: {msg.error()}")
+                    break
+            messages.append(msg)
+            self.consumer.commit()
+
+        self.consumer.close()
+        return messages
+  \end{minted}
+\end{code}
+
+Но тут была проблема, на каждом новом подключении к кафке (При каждом вызове метода get\_messages) Косьюмер долго подключался и ждал, в итоге я не выполнял success критерий по работе менее 10 секунд, но позже я нашел способ как обходить это
+
+\begin{code}
+  \begin{minted}{Python}
+  class KafkaAdapter(AbstractKafkaClusterAdapter):
+    def __init__(self, host: str, port: int):
+        self.admin_client = AdminClient({"bootstrap.servers": f"{host}:{port}"})
+        self.consumer: Consumer = Consumer(
+            {
+                "bootstrap.servers": f"{host}:{port}",
+                "group.id": "kandy",
+                "auto.offset.reset": "earliest",
+            }
+        )
+
+    @staticmethod
+    def on_assign(consumer: Consumer, partitions):
+        for partition in partitions:
+            partition.offset = confluent_kafka.OFFSET_BEGINNING
+        consumer.assign(partitions)
+
+    def get_topics(self) -> List[Topic]:
+        metadata = self.admin_client.list_topics(timeout=10)
+        topics = self.admin_client.describe_topics(
+            TopicCollection(list(metadata.topics))
+        )
+
+        result = []
+        for _, feature in topics.items():
+            topic: TopicDescription = feature.result()
+            total_messages = 0
+
+            partitions: List[Partition] = []
+            for partition_metadata in topic.partitions:
+                partition = Partition(topic_name=topic.name, id=partition_metadata.id)
+                partitions.append(partition)
+
+                # Getting partition by id
+                topic_partition = confluent_kafka.TopicPartition(
+                    topic.name, partition_metadata.id
+                )
+
+                # Amount_of_messages in the topic = the latest offset - the earliest one
+                low, high = self.consumer.get_watermark_offsets(topic_partition)
+                partition_message_count = high - low
+                total_messages += partition_message_count
+
+            result.append(
+                Topic(
+                    id=topic.topic_id,
+                    name=topic.name,
+                    is_internal=topic.is_internal,
+                    partitions=partitions,
+                    amount_of_messages=total_messages,
+                )
+            )
+
+        return result
+
+    def get_messages(self, topic: str) -> List[str]:
+        metadata = self.consumer.list_topics(topic, timeout=10)
+        if metadata.topics[topic].error is not None:
+            raise KafkaException(metadata.topics[topic].error)
+
+        running = True
+
+        messages: List[Message] = []
+
+        self.consumer.subscribe([topic], on_assign=self.on_assign)
+        while running:
+            # Timeout isn't reliable though. # TODO Find a better way to handle connection
+            msg = self.consumer.poll(timeout=10)
+            # TODO change 50 to custom config param, smth like messages per page
+            if msg is None or len(messages) >= 50:
+                running = False
+                continue
+            if msg.error():
+                if msg.error().code() == KafkaError._PARTITION_EOF:
+                    continue
+                else:
+                    logging.error(f"Error: {msg.error()}")
+                    break
+            messages.append(msg)
+            self.consumer.commit()
+
+        self.consumer.close()
+        return messages
+  \end{minted}
+\end{code}
+
+Давайте же расскажу как я это сделал и в чем была проблема. Проблема была в том, что каждый раз я открывал и закрывал consumer\_connection, и только на настройку этого самого коннекшена оно тратило неимоверно много времени, не говоря уж о вытягивании любых данных. Еще был баг, что при неожиданном окончании топика, то-есть когда сообщений было меньше 50 (Нижняя граница для отображения), оно не выходило из цикла, потому что я не поставил такого условия, и ждало положенный 10-секундный тайм аут 
+
+В итоге я пришел к такому варианту, и вынес закрытие конекшена в main функцию, после инициализации Bootstrap-а, я понял, что мой код никогда не выходит из контроллера и адаптера, то есть такой код
+
+\begin{code}
+  \begin{minted}{Python}
+    bootstraped = Bootstrap()(
+        clustername=args.clustername, host=args.host, port=args.port
+    )
+
+    bootstraped.kafka_adapter.consumer.close()
+  \end{minted}
+\end{code}
+
+запустится только в том случае, если юзер решит выйти из приложения. Проблема возникает тогда, когда появляется непредвиденная ошибка, тогда эта строчка может не вызваться и хоть кафка в течении следующей минуты удалит конекшен автоматически, но при попытке повторного подключения код зависнет. Этот баг я уже буду решать в не рамках проекта, т.к. у меня банально не осталось времени
+
+Продолжая тему сообщений, я переписал topics\_view и controller, а так же написал стили (app.css). В целом получилось как-то так, экран поделен на панели: Меню выбора активного экрана (Слева и пока не работает), топики по центру и сообщения справа. Таблички почти идентичны и будут переработаны позже, т.к. в данный момент search field немного confusing и в целом такой дизайн удобен лишь чтобы показать, что система работает, но не для реального использования.
+
+\begin{figure}[htpb]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/FinalUI.png}
+  \end{center}
+  \caption{}\label{fig:}
+\end{figure}
+
+из интересных фичей, я добавил спинер загрузки на сообщения чтобы пользователь мог понять, что приложение работает, а не зависло. Для этого часть функционала пришлось сделать асинхроным, иначе все приложение зависало пока сообщения тянулись из топика, что не есть хорошо. 
+
+\subsection{Коменты и аннотация}
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/MessagesSpinner.png}
+  \end{center}
+  \caption{}\label{fig:}
+\end{figure}
+
 
 
 \appendix
@@ -2262,9 +2778,208 @@ build-backend = "poetry.core.masonry.api"
     \caption{pyproject.toml}
 \end{listing}
 
+\section{Project}\label{appendix:project}
+\subsection{Structer}
+\begin{figure}[htbp]
+\centering
+  \begin{small}
+    \begin{BVerbatim}
+.
+├── kandy_kafka
+│   ├── adapters
+│   │   ├── __init__.py
+│   │   └── kafka_adapter.py
+│   ├── domain
+│   │   ├── __init__.py
+│   │   └── models.py
+│   ├── entrypoints
+│   │   └── __init__.py
+│   ├── gui
+│   │   ├── app.css
+│   │   ├── controller.py
+│   │   ├── __init__.py
+│   │   └── views
+│   │       ├── __init__.py
+│   │       └── topics.py
+│   ├── exceptions.py
+│   ├── bootstrap.py
+│   ├── config.py
+│   └── logger.py
+├── tests
+│   ├── conftest.py
+│   ├── features
+│   │   └── hosts.feature
+│   ├── fixtures
+│   │   ├── hosts
+│   │   │   ├── wrong_syntax_empty_file.yaml
+│   │   │   ├── wrong_syntax_missing_host.yaml
+│   │   │   └── wrong_syntax_missing_port.yaml
+│   │   ├── __init__.py
+│   │   ├── kafka_admin.py
+│   │   └── kafka_consumer.py
+│   ├── integration
+│   │   └── test_kafka_adapter.py
+│   ├── step_defs
+│   │   └── test_hosts_config.py
+│   └── unit
+│       └── test_hosts_config_fields.py
+├── docker-compose.kafka.yaml
+├── kandy.py
+├── LICENSE
+├── Makefile
+├── pyproject.toml
+└── README.md
+      \end{BVerbatim}
+    \end{small}
+\end{figure}
+\newpage
+
+\section{./}
+\subsection{docker-compose.kafka.yaml}
+\begin{code}
+  \inputminted[fontsize=\small]{YAML}{../docker-compose.kafka.yaml}
+\end{code}
+
+\subsection{kandy.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy.py}
+\end{code}
+
+\subsection{Makefile}
+\begin{code}
+  \inputminted[fontsize=\small]{make}{../Makefile}
+\end{code}
+
+\subsection{README.md}
+\begin{code}
+  \inputminted[fontsize=\small]{MarkDown}{../README.md}
+\end{code}
+
+\newpage
+\section{./kandy\_kafka}
+\subsection{adapters/kafka\_adapter.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy_kafka/adapters/kafka_adapter.py}
+\end{code}
+
+\subsection{domain/models.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy_kafka/domain/models.py}
+\end{code}
+
+\subsection{gui/app.css}
+\begin{code}
+  \inputminted[fontsize=\small]{text}{../kandy_kafka/gui/app.css}
+\end{code}
+
+\subsection{gui/controller.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy_kafka/gui/controller.py}
+\end{code}
+
+\subsection{gui/views/topics.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy_kafka/gui/views/topics.py}
+\end{code}
+
+\subsection{exceptions.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy_kafka/exceptions.py}
+\end{code}
+
+\subsection{bootstrap.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy_kafka/bootstrap.py}
+\end{code}
+
+\subsection{config.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy_kafka/config.py}
+\end{code}
+
+\subsection{logger.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../kandy_kafka/logger.py}
+\end{code}
+
+\newpage
+\section{./tests}
+\subsection{conftest.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../tests/conftest.py}
+\end{code}
+
+\subsection{features/hosts.feature}
+\begin{code}
+  \inputminted[fontsize=\small]{Gherkin}{../tests/features/hosts.feature}
+\end{code}
+
+\subsection{fixtures/hosts/wrong\_syntax\_empty\_file.yaml}
+\begin{code}
+  \inputminted[fontsize=\small]{YAML}{../tests/fixtures/hosts/wrong_syntax_empty_file.yaml}
+\end{code}
+
+\subsection{fixtures/hosts/wrong\_syntax\_missing\_host.yaml}
+\begin{code}
+  \inputminted[fontsize=\small]{YAML}{../tests/fixtures/hosts/wrong_syntax_missing_host}
+\end{code}
+
+\subsection{fixtures/hosts/wrong\_syntax\_missing\_port.yaml}
+\begin{code}
+  \inputminted[fontsize=\small]{YAML}{../tests/fixtures/hosts/wrong_syntax_missing_port}
+\end{code}
+
+\subsection{fixtures/hosts/kafka\_admin.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../tests/fixtures/kafka_admin.py}
+\end{code}
+
+\subsection{fixtures/hosts/kafka\_consumer.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../tests/fixtures/kafka_consumer.py}
+\end{code}
+
+\subsection{integration/test\_kafka\_adapter.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../tests/integration/test_kafka_adapter.py}
+\end{code}
+
+\subsection{step\_defs/test\_hosts\_config.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../tests/step_defs/test_hosts_config.py}
+\end{code}
+
+\subsection{unit/test\_hosts\_config\_fields.py}
+\begin{code}
+  \inputminted[fontsize=\small]{Python}{../tests/unit/test_hosts_config_fields.py}
+\end{code}
+
 \renewcommand{\bibname}{References}
 \begin{thebibliography}{00}
-\bibitem{b1} None yet
+\bibitem{confluent-kafka-docs} docs.confluent.io. (n.d.). confluent\_kafka API — confluent-kafka 2.2.0 documentation. [online] Available at: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html.
+
+\bibitem{textual-docs} Textual Documentation. (n.d.). Textual - Tutorial. [online] Available at: https://textual.textualize.io/tutorial/.
+
+\bibitem{urwid-docs} Urwid.org. (2014). — Urwid 2.6.14. [online] Available at: https://urwid.org/index.html [Accessed 10 Dec. 2024].
+
+\bibitem{pydantic-docs} docs.pydantic.dev. (n.d.). Pydantic. [online] Available at: https://docs.pydantic.dev/latest/.
+
+\bibitem{refactor-guru} Refactoring Guru (2014). Design Patterns. [online] Refactoring.guru. Available at: https://refactoring.guru/design-patterns.
+
+\bibitem{source-confluent-kafka} GitHub. (n.d.). GitHub - confluentinc/confluent-kafka-python: Confluent’s Kafka Python Client. [online] Available at: https://github.com/confluentinc/confluent-kafka-python.
+
+
+\bibitem{b1} Docker.com. (2024). Available at: https://hub.docker.com/r/confluentinc/cp-kafka [Accessed 12 Dec. 2024].
+
+\bibitem{b2} docs.pytest.org. (n.d.). pytest: helps you write better programs — pytest documentation. [online] Available at: https://docs.pytest.org/en/stable/.
+
+\bibitem{b3} pytest-bdd.readthedocs.io. (n.d.). Welcome to Pytest-BDD’s documentation! — Pytest-BDD 7.1.2 documentation. [online] Available at: https://pytest-bdd.readthedocs.io/en/stable/.
+
+\bibitem{b4} jhogan (2024). GitHub - jhogan/pywid: A Python library for creating Curses based widgets. [online] GitHub. Available at: https://github.com/jhogan/pywid/tree/master [Accessed 12 Dec. 2024].
+
+\bibitem{b5} Apache Kafka. (n.d.). Apache Kafka. [online] Available at: https://kafka.apache.org/documentation/.
+
+
 \end{thebibliography}
 
 \end{document}

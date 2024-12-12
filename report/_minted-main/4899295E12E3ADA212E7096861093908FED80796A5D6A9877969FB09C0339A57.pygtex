@@ -1,0 +1,83 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{os}
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka} \PYG{k+kn}{import} \PYG{n}{logger}
+\PYG{k+kn}{from} \PYG{n+nn}{pathlib} \PYG{k+kn}{import} \PYG{n}{Path}
+
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.exceptions} \PYG{k+kn}{import} \PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{,} \PYG{n}{HostsFileNotFound}
+
+\PYG{k+kn}{import} \PYG{n+nn}{yaml}
+
+
+\PYG{k}{class} \PYG{n+nc}{Config}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Configuration class for setting up Kafka connection and general application settings}
+
+\PYG{l+s+sd}{    Attributes:}
+\PYG{l+s+sd}{        LOGGING\PYGZus{}LEVEL (str): The logging level for the application}
+\PYG{l+s+sd}{        KAFKA\PYGZus{}HOST (str): The host address of the Kafka server}
+\PYG{l+s+sd}{        KAFKA\PYGZus{}PORT (int): The port of the Kafka server}
+\PYG{l+s+sd}{        DATA\PYGZus{}POLLING\PYGZus{}INTERVAL (int): Interval in seconds for polling data from Kafka}
+\PYG{l+s+sd}{        PALETTE (List): The color palette for the application UI}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n}{LOGGING\PYGZus{}LEVEL}\PYG{p}{:} \PYG{n+nb}{str}
+
+    \PYG{n}{KAFKA\PYGZus{}HOST}\PYG{p}{:} \PYG{n+nb}{str}
+    \PYG{n}{KAFKA\PYGZus{}PORT}\PYG{p}{:} \PYG{n+nb}{int}
+
+    \PYG{n}{DATA\PYGZus{}POLLING\PYGZus{}INTERVAL}\PYG{p}{:} \PYG{n+nb}{int}  \PYG{c+c1}{\PYGZsh{} Time in seconds \PYGZhy{} how often to poll data from Kafka}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{host}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}localhost\PYGZdq{}}\PYG{p}{,} \PYG{n}{port}\PYG{o}{=}\PYG{l+m+mi}{29092}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{k+kc}{None}\PYG{p}{:}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Initializes the Config class with default host and port for Kafka}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            host (str): Kafka host, defaults to \PYGZdq{}localhost\PYGZdq{}}
+\PYG{l+s+sd}{            port (int): Kafka port, defaults to 29092}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{LOGGING\PYGZus{}LEVEL} \PYG{o}{=} \PYG{n}{os}\PYG{o}{.}\PYG{n}{getenv}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}LOGGING\PYGZus{}LEVEL\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}INFO\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{logger}\PYG{o}{.}\PYG{n}{setup\PYGZus{}logger}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{LOGGING\PYGZus{}LEVEL}\PYG{p}{)}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file} \PYG{o}{=} \PYG{n}{Path}\PYG{o}{.}\PYG{n}{home}\PYG{p}{()} \PYG{o}{/} \PYG{l+s+s2}{\PYGZdq{}.config\PYGZdq{}} \PYG{o}{/} \PYG{l+s+s2}{\PYGZdq{}kandy\PYGZdq{}} \PYG{o}{/} \PYG{l+s+s2}{\PYGZdq{}hosts.yaml\PYGZdq{}}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST} \PYG{o}{=} \PYG{n}{host}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT} \PYG{o}{=} \PYG{n}{port}
+
+    \PYG{k}{def} \PYG{n+nf}{load\PYGZus{}hosts}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{clustername}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}default\PYGZdq{}}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{k+kc}{None}\PYG{p}{:}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Loads the Kafka host and port settings from a hosts YAML file based on the cluster name}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            clustername (str): The name of the Kafka cluster, defaults to \PYGZdq{}default\PYGZdq{}}
+\PYG{l+s+sd}{            config\PYGZus{}file (Path, optional): Optional path to a specific configuration file}
+
+\PYG{l+s+sd}{        Raises:}
+\PYG{l+s+sd}{            HostsFileNotFound: If the hosts file is not found}
+\PYG{l+s+sd}{            HostsFileHasWrongSyntax: If the hosts file has incorrect syntax or the cluster is not found}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{if} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{o}{.}\PYG{n}{exists}\PYG{p}{():}
+            \PYG{k}{raise} \PYG{n}{HostsFileNotFound}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Hosts file }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ not found\PYGZdq{}}\PYG{p}{)}
+
+        \PYG{c+c1}{\PYGZsh{} Optionally use a non\PYGZhy{}default config file}
+        \PYG{k}{if} \PYG{n}{config\PYGZus{}file}\PYG{p}{:}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file} \PYG{o}{=} \PYG{n}{config\PYGZus{}file}
+
+        \PYG{k}{with} \PYG{n+nb}{open}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}r\PYGZdq{}}\PYG{p}{)} \PYG{k}{as} \PYG{n}{file}\PYG{p}{:}
+            \PYG{n}{hosts} \PYG{o}{=} \PYG{n}{yaml}\PYG{o}{.}\PYG{n}{safe\PYGZus{}load}\PYG{p}{(}\PYG{n}{file}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n}{hosts} \PYG{o+ow}{is} \PYG{k+kc}{None}\PYG{p}{:}
+                \PYG{k}{raise} \PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Hosts file }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ is empty\PYGZdq{}}\PYG{p}{)}
+
+            \PYG{k}{if} \PYG{n}{clustername} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{hosts}\PYG{p}{:}
+                \PYG{k}{raise} \PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{(}
+                    \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Clustername }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{clustername}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ not found in }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}
+                \PYG{p}{)}
+
+            \PYG{n}{cluster} \PYG{o}{=} \PYG{n}{hosts}\PYG{p}{[}\PYG{n}{clustername}\PYG{p}{]}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST} \PYG{o}{=} \PYG{n}{cluster}\PYG{o}{.}\PYG{n}{get}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}host\PYGZdq{}}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT} \PYG{o}{=} \PYG{n}{cluster}\PYG{o}{.}\PYG{n}{get}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}port\PYGZdq{}}\PYG{p}{)}
+
+            \PYG{k}{if} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST} \PYG{o+ow}{or} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT}\PYG{p}{:}
+                \PYG{k}{raise} \PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{(}
+                    \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Host or port not found in }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}
+                \PYG{p}{)}
+\end{Verbatim}
