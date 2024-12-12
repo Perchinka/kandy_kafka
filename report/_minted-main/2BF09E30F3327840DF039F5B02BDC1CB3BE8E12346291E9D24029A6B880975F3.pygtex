@@ -1,4 +1,0 @@
-\begin{Verbatim}[commandchars=\\\{\}]
-  \PYG{k}{class} \PYG{n+nc}{HostsFileNotFound}\PYG{p}{(}\PYG{n+ne}{Exception}\PYG{p}{):}
-    \PYG{k}{pass}
-\end{Verbatim}

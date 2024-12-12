@@ -1,7 +1,0 @@
-\begin{Verbatim}[commandchars=\\\{\}]
-    \PYG{n}{bootstraped} \PYG{o}{=} \PYG{n}{Bootstrap}\PYG{p}{()(}
-        \PYG{n}{clustername}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{clustername}\PYG{p}{,} \PYG{n}{host}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{host}\PYG{p}{,} \PYG{n}{port}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{port}
-    \PYG{p}{)}
-
-    \PYG{n}{bootstraped}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter}\PYG{o}{.}\PYG{n}{consumer}\PYG{o}{.}\PYG{n}{close}\PYG{p}{()}
-\end{Verbatim}

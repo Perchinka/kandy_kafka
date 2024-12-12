@@ -1,5 +1,0 @@
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{k+kn}{from} \PYG{n+nn}{tests.fixtures.kafka\PYGZus{}admin} \PYG{k+kn}{import} \PYG{n}{kafka\PYGZus{}admin\PYGZus{}client}\PYG{p}{,} \PYG{n}{server}
-
-\PYG{n}{\PYGZus{}\PYGZus{}all\PYGZus{}\PYGZus{}} \PYG{o}{=} \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}kafka\PYGZus{}admin\PYGZus{}client\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}server\PYGZdq{}}\PYG{p}{]}
-\end{Verbatim}
