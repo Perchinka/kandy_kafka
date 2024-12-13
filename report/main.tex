@@ -66,7 +66,7 @@
 
 \author{\textbf{Alex Lukin}\\
 Center: 22109\\
-Student: 009961\\
+Student: 3643\\
 Chesterton Community College\\
 \textit{Cambridge, United Kingdom}\\}
 
@@ -1053,7 +1053,7 @@ The first MVP version will only include the topic view and message view. I will 
     \item A messages pane showing the last \textit{N} messages in the selected topic. By pressing enter on any topic will open new screen with messages stored in this topic 
 \end{itemize}
 
-I think good usability feature that I should include is ability to sort data in the table not only by name, but also but other parameters, as it will definitely speed up users' development process. Also, despite complexity of features proposed by my stakeholder, I should consider them, because it is simply pain points and usability features that will "sell" my product.
+I think good usability feature that I should include is ability to sort data in the table not only by name, but also but other parameters, as it will definitely speed up users' development process. Also, despite complexity of features proposed by my stakeholder, I should consider them, because it is simply users pain points and creating usability features addressing this points will "sell" my product.
 
 \begin{figure}[htbp]
     \centering
@@ -1114,6 +1114,26 @@ It is crucial to establish the testing boundaries early on to avoid spending exc
 
 Since this is an MVP, stress testing and scalability are not critical at this stage. The MVP's goal is to function and demonstrate the system's capabilities to the stakeholders. Like a sketch in drawing, an MVP provides sufficient understanding but is almost never the final extensible solution. Therefore, I decided not to include performance benchmarking in the initial releases, and stress testing will only be conducted if time allows.
 
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Data Type} & \textbf{Description and Justification} \\ \hline
+User Feedback & Collecting user feedback is crucial, as it allows to identify pain points  \\ \hline
+Performance Metrics & Measure response times, latency, and throughput under normal and stressed condition. It helps validate performance efficiency and reliability. \\ \hline
+Log & Logs are very convenient way to trace bugs. It will help in enhancing Fault Tolerance and Maintainability. \\ \hline
+User Interaction Tracking & Analyze usage patterns through clickstream data or heatmaps to optimize UI and improve Usability. (But in my project I probably won't do it, as it is extremley hard to do) \\ \hline
+Regression Testing Results & I will automate test suites and collect pass/fail results after each itteration and in post development phase. It helps to be sure, that system aligns with my vision (But it only works if tests are good). \\ \hline
+System Resource Utilization & I could monitor CPU, memory, and network usage to identify and resolve performance bottlenecks. \\ \hline
+Benchmark Comparisons & Compare system performance metrics to industry standards as I don't have any better source. \\ \hline
+
+\end{tabular}
+\caption{Post-Development Data}
+\label{tab:post_dev_data}
+\end{table}
+
+\newpage
 \subsection{Release and Support}
 \begin{figure}[htbp]
     \centering
@@ -2939,8 +2959,25 @@ One interesting feature I added is a loading spinner for messages, so users can 
   \end{center}
   \caption{}\label{fig:}
 \end{figure}
+
 \newpage
 \subsection{Comments and annotation}
+
+During the development of the first release, since I changed the code often and the logic was generally not overcomplicated, I was leaving most of the code without any comments and/or annotations, but as the codebase grew, I had to spend more and more time on refactoring, so later versions of the code have more and more comments and the final code that I presented in Appendix~\ref{appendix:project} is fully annotated following PEP8 - Python standards. Each function is described in the docstring using the following template:
+
+\begin{itemize}
+\item Purpose: brief explanation of what this function does
+\item Arguments: Input of function
+\item Return: What does this function return
+\end{itemize}
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/DocStringExample.png}
+  \end{center}
+  \caption{Docstring example}\label{fig:}
+\end{figure}
+
 
 \newpage
 \chapter{Evaluation}

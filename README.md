@@ -13,6 +13,7 @@ Before installing Kandy, ensure you have the following prerequisites installed o
 - **Python 3.11**
 - **Poetry** (Python dependency management and packaging tool)
 - **Make** (Build automation tool)
+- **Docker** {Optional if you want run kafka localy}
 
 ### Install from Git Repository
 

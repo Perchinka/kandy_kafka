@@ -72,7 +72,7 @@ def config_file_with_correct_syntax(config_file):
 
 
 @then("config should have valid connection details")
-def check_config_connection_details(config, config_file):
+def check_config_details(config, config_file):
     config.load_hosts("default", config_file)
     assert config.KAFKA_HOST == "localhost"
     assert config.KAFKA_PORT == 9092

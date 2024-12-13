@@ -48,67 +48,67 @@
 \contentsline {subsection}{\numberline {4.1.5}Algorithm for Topic Menu Functionality}{39}{}%
 \contentsline {subsection}{\numberline {4.1.6}Tech Stack}{40}{}%
 \contentsline {subsection}{\numberline {4.1.7}Testing and Debugging}{41}{}%
-\contentsline {subsection}{\numberline {4.1.8}Release and Support}{41}{}%
-\contentsline {section}{\numberline {4.2}Structure of the Solution}{42}{}%
+\contentsline {subsection}{\numberline {4.1.8}Release and Support}{42}{}%
+\contentsline {section}{\numberline {4.2}Structure of the Solution}{43}{}%
 \contentsline {subsection}{\numberline {4.2.1}MVC use}{43}{}%
 \contentsline {subsubsection}{Model}{43}{}%
-\contentsline {subsubsection}{View}{43}{}%
-\contentsline {subsubsection}{Controller}{43}{}%
+\contentsline {subsubsection}{View}{44}{}%
+\contentsline {subsubsection}{Controller}{44}{}%
 \contentsline {subsection}{\numberline {4.2.2}Architecture}{44}{}%
 \contentsline {subsection}{\numberline {4.2.3}Models}{45}{}%
 \contentsline {subsection}{\numberline {4.2.4}Adapter}{46}{}%
-\contentsline {chapter}{\numberline {5}Development}{47}{}%
-\contentsline {section}{\numberline {5.1}Preparation}{47}{}%
-\contentsline {subsection}{\numberline {5.1.1}Folder Structure}{47}{}%
-\contentsline {subsection}{\numberline {5.1.2}Libraries}{48}{}%
-\contentsline {section}{\numberline {5.2}Coding}{49}{}%
-\contentsline {subsection}{\numberline {5.2.1}Project Skeleton}{49}{}%
-\contentsline {subsection}{\numberline {5.2.2}Configuration functionality}{52}{}%
-\contentsline {subsection}{\numberline {5.2.3}Running the First Test}{56}{}%
-\contentsline {subsection}{\numberline {5.2.4}Connecting to Kafka}{63}{}%
-\contentsline {subsubsection}{Writing Integration Tests}{66}{}%
-\contentsline {subsection}{\numberline {5.2.5}GUI: Topics}{68}{}%
-\contentsline {subsection}{\numberline {5.2.6}Switching to Textual}{75}{}%
-\contentsline {subsection}{\numberline {5.2.7}Finish Line}{78}{}%
-\contentsline {subsection}{\numberline {5.2.8}Comments and annotation}{88}{}%
-\contentsline {chapter}{\numberline {6}Evaluation}{89}{}%
-\contentsline {subsubsection}{Test Evidences:}{90}{}%
-\contentsline {subsection}{\numberline {6.0.1}Addressing Partially Met and Unmet Criteria}{94}{}%
-\contentsline {subsection}{\numberline {6.0.2}Maintenance Issues and Limitations of the Solution}{95}{}%
-\contentsline {subsubsection}{Configuration Management}{95}{}%
-\contentsline {subsubsection}{Testing Coverage}{95}{}%
-\contentsline {subsubsection}{Scalability}{95}{}%
-\contentsline {subsubsection}{Error Handling}{95}{}%
-\contentsline {subsubsection}{UI Responsiveness}{95}{}%
-\contentsline {subsubsection}{Documentation}{95}{}%
-\contentsline {chapter}{\numberline {A}System Design}{96}{}%
-\contentsline {chapter}{\numberline {B}Files}{97}{}%
-\contentsline {section}{\numberline {B.1}pyproject.toml (Libraries and dependencies)}{97}{}%
-\contentsline {section}{\numberline {B.2}Project}{98}{}%
-\contentsline {subsection}{\numberline {B.2.1}Structer}{98}{}%
-\contentsline {section}{\numberline {B.3}./}{100}{}%
-\contentsline {subsection}{\numberline {B.3.1}docker-compose.kafka.yaml}{100}{}%
-\contentsline {subsection}{\numberline {B.3.2}kandy.py}{100}{}%
-\contentsline {subsection}{\numberline {B.3.3}Makefile}{102}{}%
-\contentsline {subsection}{\numberline {B.3.4}README.md}{102}{}%
-\contentsline {section}{\numberline {B.4}./kandy\_kafka}{105}{}%
-\contentsline {subsection}{\numberline {B.4.1}adapters/kafka\_adapter.py}{105}{}%
-\contentsline {subsection}{\numberline {B.4.2}domain/models.py}{109}{}%
-\contentsline {subsection}{\numberline {B.4.3}gui/app.css}{110}{}%
-\contentsline {subsection}{\numberline {B.4.4}gui/controller.py}{111}{}%
-\contentsline {subsection}{\numberline {B.4.5}gui/views/topics.py}{112}{}%
-\contentsline {subsection}{\numberline {B.4.6}exceptions.py}{118}{}%
-\contentsline {subsection}{\numberline {B.4.7}bootstrap.py}{118}{}%
-\contentsline {subsection}{\numberline {B.4.8}config.py}{119}{}%
-\contentsline {subsection}{\numberline {B.4.9}logger.py}{121}{}%
-\contentsline {section}{\numberline {B.5}./tests}{122}{}%
-\contentsline {subsection}{\numberline {B.5.1}conftest.py}{122}{}%
-\contentsline {subsection}{\numberline {B.5.2}features/hosts.feature}{122}{}%
-\contentsline {subsection}{\numberline {B.5.3}fixtures/hosts/wrong\_syntax\_empty\_file.yaml}{122}{}%
-\contentsline {subsection}{\numberline {B.5.4}fixtures/hosts/wrong\_syntax\_missing\_host.yaml}{122}{}%
-\contentsline {subsection}{\numberline {B.5.5}fixtures/hosts/wrong\_syntax\_missing\_port.yaml}{123}{}%
-\contentsline {subsection}{\numberline {B.5.6}fixtures/hosts/kafka\_admin.py}{123}{}%
-\contentsline {subsection}{\numberline {B.5.7}fixtures/hosts/kafka\_consumer.py}{123}{}%
-\contentsline {subsection}{\numberline {B.5.8}integration/test\_kafka\_adapter.py}{124}{}%
-\contentsline {subsection}{\numberline {B.5.9}step\_defs/test\_hosts\_config.py}{127}{}%
-\contentsline {subsection}{\numberline {B.5.10}unit/test\_hosts\_config\_fields.py}{129}{}%
+\contentsline {chapter}{\numberline {5}Development}{48}{}%
+\contentsline {section}{\numberline {5.1}Preparation}{48}{}%
+\contentsline {subsection}{\numberline {5.1.1}Folder Structure}{48}{}%
+\contentsline {subsection}{\numberline {5.1.2}Libraries}{49}{}%
+\contentsline {section}{\numberline {5.2}Coding}{50}{}%
+\contentsline {subsection}{\numberline {5.2.1}Project Skeleton}{50}{}%
+\contentsline {subsection}{\numberline {5.2.2}Configuration functionality}{53}{}%
+\contentsline {subsection}{\numberline {5.2.3}Running the First Test}{57}{}%
+\contentsline {subsection}{\numberline {5.2.4}Connecting to Kafka}{64}{}%
+\contentsline {subsubsection}{Writing Integration Tests}{67}{}%
+\contentsline {subsection}{\numberline {5.2.5}GUI: Topics}{69}{}%
+\contentsline {subsection}{\numberline {5.2.6}Switching to Textual}{76}{}%
+\contentsline {subsection}{\numberline {5.2.7}Finish Line}{79}{}%
+\contentsline {subsection}{\numberline {5.2.8}Comments and annotation}{89}{}%
+\contentsline {chapter}{\numberline {6}Evaluation}{90}{}%
+\contentsline {subsubsection}{Test Evidences:}{91}{}%
+\contentsline {subsection}{\numberline {6.0.1}Addressing Partially Met and Unmet Criteria}{95}{}%
+\contentsline {subsection}{\numberline {6.0.2}Maintenance Issues and Limitations of the Solution}{96}{}%
+\contentsline {subsubsection}{Configuration Management}{96}{}%
+\contentsline {subsubsection}{Testing Coverage}{96}{}%
+\contentsline {subsubsection}{Scalability}{96}{}%
+\contentsline {subsubsection}{Error Handling}{96}{}%
+\contentsline {subsubsection}{UI Responsiveness}{96}{}%
+\contentsline {subsubsection}{Documentation}{96}{}%
+\contentsline {chapter}{\numberline {A}System Design}{97}{}%
+\contentsline {chapter}{\numberline {B}Files}{98}{}%
+\contentsline {section}{\numberline {B.1}pyproject.toml (Libraries and dependencies)}{98}{}%
+\contentsline {section}{\numberline {B.2}Project}{99}{}%
+\contentsline {subsection}{\numberline {B.2.1}Structer}{99}{}%
+\contentsline {section}{\numberline {B.3}./}{101}{}%
+\contentsline {subsection}{\numberline {B.3.1}docker-compose.kafka.yaml}{101}{}%
+\contentsline {subsection}{\numberline {B.3.2}kandy.py}{101}{}%
+\contentsline {subsection}{\numberline {B.3.3}Makefile}{103}{}%
+\contentsline {subsection}{\numberline {B.3.4}README.md}{103}{}%
+\contentsline {section}{\numberline {B.4}./kandy\_kafka}{106}{}%
+\contentsline {subsection}{\numberline {B.4.1}adapters/kafka\_adapter.py}{106}{}%
+\contentsline {subsection}{\numberline {B.4.2}domain/models.py}{110}{}%
+\contentsline {subsection}{\numberline {B.4.3}gui/app.css}{111}{}%
+\contentsline {subsection}{\numberline {B.4.4}gui/controller.py}{112}{}%
+\contentsline {subsection}{\numberline {B.4.5}gui/views/topics.py}{113}{}%
+\contentsline {subsection}{\numberline {B.4.6}exceptions.py}{119}{}%
+\contentsline {subsection}{\numberline {B.4.7}bootstrap.py}{119}{}%
+\contentsline {subsection}{\numberline {B.4.8}config.py}{120}{}%
+\contentsline {subsection}{\numberline {B.4.9}logger.py}{122}{}%
+\contentsline {section}{\numberline {B.5}./tests}{123}{}%
+\contentsline {subsection}{\numberline {B.5.1}conftest.py}{123}{}%
+\contentsline {subsection}{\numberline {B.5.2}features/hosts.feature}{123}{}%
+\contentsline {subsection}{\numberline {B.5.3}fixtures/hosts/wrong\_syntax\_empty\_file.yaml}{123}{}%
+\contentsline {subsection}{\numberline {B.5.4}fixtures/hosts/wrong\_syntax\_missing\_host.yaml}{123}{}%
+\contentsline {subsection}{\numberline {B.5.5}fixtures/hosts/wrong\_syntax\_missing\_port.yaml}{124}{}%
+\contentsline {subsection}{\numberline {B.5.6}fixtures/hosts/kafka\_admin.py}{124}{}%
+\contentsline {subsection}{\numberline {B.5.7}fixtures/hosts/kafka\_consumer.py}{124}{}%
+\contentsline {subsection}{\numberline {B.5.8}integration/test\_kafka\_adapter.py}{125}{}%
+\contentsline {subsection}{\numberline {B.5.9}step\_defs/test\_hosts\_config.py}{128}{}%
+\contentsline {subsection}{\numberline {B.5.10}unit/test\_hosts\_config\_fields.py}{130}{}%
