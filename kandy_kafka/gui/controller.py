@@ -11,8 +11,17 @@ from kandy_kafka.gui.views import TopicsView
 
 
 class Controller(App):
-    """Main application controller"""
+    """
+    Main application controller (GUI)
 
+    This class controls the overall flow of the Textual-based application, managing
+    views and keybindings for user interaction.
+
+    Attributes:
+        view (TopicsView): The main view displaying Kafka topics.
+    """
+
+    # Key bindings for navigation and control within the application
     BINDINGS = [
         (
             "h",
@@ -25,9 +34,6 @@ class Controller(App):
     def __init__(self, bootstraped: Bootstraped):
         super().__init__()
         self.view = TopicsView(bootstraped)  # Instantiate the TopicsView from views.py
-
-    async def reload_topics(self):
-        self.view.load_topics()  # Update the table in the view
 
     def compose(self) -> ComposeResult:
         yield self.view

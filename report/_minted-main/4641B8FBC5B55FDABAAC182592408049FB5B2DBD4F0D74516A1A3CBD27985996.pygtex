@@ -1,0 +1,32 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{Feature:}\PYG{n+nf}{ Read and validate host configuration}
+
+\PYG{n+nf}{  }\PYG{k}{Scenario:}\PYG{n+nf}{ Error when no configuration file is found}
+\PYG{k}{    Given }\PYG{n+nf}{Configuration file is not present}
+\PYG{n+nf}{    }\PYG{k}{When }\PYG{n+nf}{system loads config  }
+\PYG{n+nf}{    }\PYG{k}{Then }\PYG{n+nf}{application should prompt user to create or specify a configuration file}
+\PYG{n+nf}{  }
+\PYG{n+nf}{  }\PYG{k}{Scenario Outline:}\PYG{n+nf}{ Configuration file has syntax error}
+\PYG{k}{    Given }\PYG{n+nf}{Configuration file is present}
+\PYG{n+nf}{    }\PYG{k}{And }\PYG{n+nf}{Configuration file has }\PYG{n+nv}{\PYGZlt{}error\PYGZus{}type\PYGZgt{}}\PYG{n+nf}{ syntax error}
+\PYG{n+nf}{    }\PYG{k}{When }\PYG{n+nf}{system loads config}
+\PYG{n+nf}{    }\PYG{k}{Then }\PYG{n+nf}{application should show }\PYG{n+nv}{\PYGZlt{}error\PYGZgt{}}
+
+\PYG{n+nf}{    }\PYG{k}{Examples:}
+\PYG{k}{      |}\PYG{n+nv}{ error\PYGZus{}type}\PYG{k}{ |}\PYG{n+nv}{ error}\PYG{k}{ |}
+\PYG{k}{      |}\PYG{l+s}{ missing\PYGZus{}host}\PYG{k}{ |}\PYG{l+s}{ \PYGZdq{}Host is missing\PYGZdq{}}\PYG{k}{ |}
+\PYG{k}{      |}\PYG{l+s}{ missing\PYGZus{}port}\PYG{k}{ |}\PYG{l+s}{ \PYGZdq{}Port is missing\PYGZdq{}}\PYG{k}{ |}
+\PYG{k}{      |}\PYG{l+s}{ empty\PYGZus{}file}\PYG{k}{ |}\PYG{l+s}{ \PYGZdq{}Configuration file is empty\PYGZdq{}}\PYG{k}{ |}
+
+\PYG{n+nf}{  }\PYG{k}{Scenario:}\PYG{n+nf}{ Configuration file is valid}
+\PYG{k}{    Given }\PYG{n+nf}{Configuration file is present}
+\PYG{n+nf}{    }\PYG{k}{And }\PYG{n+nf}{Configuration file has valid syntax}
+\PYG{n+nf}{    }\PYG{k}{When }\PYG{n+nf}{system loads config}
+\PYG{n+nf}{    }\PYG{k}{Then }\PYG{n+nf}{config should have valid connection details}
+
+\PYG{n+nf}{  }\PYG{k}{Scenario:}\PYG{n+nf}{ Configuration file has invalid yaml syntax}
+\PYG{k}{    Given }\PYG{n+nf}{Configuration file is present}
+\PYG{n+nf}{    }\PYG{k}{And }\PYG{n+nf}{Configuration file has invalid yaml syntax}
+\PYG{n+nf}{    }\PYG{k}{When }\PYG{n+nf}{system loads config}
+\PYG{n+nf}{    }\PYG{k}{Then }\PYG{n+nf}{application should raise yaml error}
+\end{Verbatim}

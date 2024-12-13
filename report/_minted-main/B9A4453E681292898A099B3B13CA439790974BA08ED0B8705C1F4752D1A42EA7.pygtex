@@ -1,0 +1,71 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{dataclasses} \PYG{k+kn}{import} \PYG{n}{dataclass}
+\PYG{k+kn}{import} \PYG{n+nn}{logging}
+\PYG{k+kn}{from} \PYG{n+nn}{typing} \PYG{k+kn}{import} \PYG{n}{Any}
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.adapters.kafka\PYGZus{}adapter} \PYG{k+kn}{import} \PYG{n}{KafkaAdapter}
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.config} \PYG{k+kn}{import} \PYG{n}{Config}
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.gui.controller} \PYG{k+kn}{import} \PYG{n}{Controller}
+
+
+\PYG{n+nd}{@dataclass}
+\PYG{k}{class} \PYG{n+nc}{Bootstraped}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Data class to hold essential components for the bootstrapped system}
+
+\PYG{l+s+sd}{    Attributes:}
+\PYG{l+s+sd}{        config (Config): The configuration object}
+\PYG{l+s+sd}{        kafka\PYGZus{}adapter (KafkaAdapter): The adapter used to interface with the Kafka cluster}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n}{config}\PYG{p}{:} \PYG{n}{Config}
+    \PYG{n}{kafka\PYGZus{}adapter}\PYG{p}{:} \PYG{n}{KafkaAdapter}
+
+
+\PYG{k}{class} \PYG{n+nc}{Bootstrap}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Class responsible for bootstrapping the application by loading configuration and setting up Kafka components}
+
+\PYG{l+s+sd}{    This class creates an instance of `Bootstraped` which holds the configuration and Kafka adapter}
+\PYG{l+s+sd}{    and starts the application by initializing the Controller}
+
+\PYG{l+s+sd}{    Attributes:}
+\PYG{l+s+sd}{        bootstraped (Bootstraped): A static attribute that stores the bootstrapped components once initialized}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n}{bootstraped}\PYG{p}{:} \PYG{n}{Bootstraped}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}call\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{o}{*}\PYG{n}{args}\PYG{p}{:} \PYG{n}{Any}\PYG{p}{,} \PYG{o}{**}\PYG{n}{kwds}\PYG{p}{:} \PYG{n}{Any}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{Bootstraped}\PYG{p}{:}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Invokes the bootstrap process. This method loads configuration, initializes the Kafka adapter}
+\PYG{l+s+sd}{        and starts the application by launching the Controller}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            *args (Any): Additional arguments (not used in the current implementation)}
+\PYG{l+s+sd}{            **kwds (Any): Keyword arguments containing \PYGZsq{}host\PYGZsq{}, \PYGZsq{}port\PYGZsq{}, and optionally \PYGZsq{}clustername\PYGZsq{} for Kafka setup}
+
+\PYG{l+s+sd}{        Returns:}
+\PYG{l+s+sd}{            Bootstraped: Returns an instance of `Bootstraped` containing the config and Kafka adapter}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n}{logging}\PYG{o}{.}\PYG{n}{info}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}ATTEMPTING TO BOOTSTRAP \PYGZhy{} initializing config\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{config} \PYG{o}{=} \PYG{n}{Config}\PYG{p}{(}\PYG{n}{kwds}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}host\PYGZdq{}}\PYG{p}{],} \PYG{n}{kwds}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}port\PYGZdq{}}\PYG{p}{])}
+
+        \PYG{c+c1}{\PYGZsh{} TODO rewrite this}
+        \PYG{k}{if} \PYG{n}{kwds}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}clustername\PYGZdq{}}\PYG{p}{]:}
+            \PYG{n}{config}\PYG{o}{.}\PYG{n}{load\PYGZus{}hosts}\PYG{p}{(}\PYG{n}{kwds}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}clustername\PYGZdq{}}\PYG{p}{])}
+
+        \PYG{n}{logging}\PYG{o}{.}\PYG{n}{info}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}ATTEMPTING TO BOOTSTRAP \PYGZhy{} creating KafkaAdapter\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{kafka\PYGZus{}adapter} \PYG{o}{=} \PYG{n}{KafkaAdapter}\PYG{p}{(}\PYG{n}{config}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST}\PYG{p}{,} \PYG{n}{config}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT}\PYG{p}{)}
+
+        \PYG{n}{Bootstrap}\PYG{o}{.}\PYG{n}{bootstraped} \PYG{o}{=} \PYG{n}{Bootstraped}\PYG{p}{(}
+            \PYG{n}{config}\PYG{o}{=}\PYG{n}{config}\PYG{p}{,}
+            \PYG{n}{kafka\PYGZus{}adapter}\PYG{o}{=}\PYG{n}{kafka\PYGZus{}adapter}\PYG{p}{,}
+        \PYG{p}{)}
+
+        \PYG{n}{controller} \PYG{o}{=} \PYG{n}{Controller}\PYG{p}{(}\PYG{n}{Bootstrap}\PYG{o}{.}\PYG{n}{bootstraped}\PYG{p}{)}
+        \PYG{n}{controller}\PYG{o}{.}\PYG{n}{run}\PYG{p}{()}
+        \PYG{c+c1}{\PYGZsh{} TODO: Implement graceful connection error handling for better fault tolerance}
+
+        \PYG{n}{logging}\PYG{o}{.}\PYG{n}{info}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}BOOTSTRAPING Completed\PYGZdq{}}\PYG{p}{)}
+
+        \PYG{k}{return} \PYG{n}{Bootstrap}\PYG{o}{.}\PYG{n}{bootstraped}
+\end{Verbatim}

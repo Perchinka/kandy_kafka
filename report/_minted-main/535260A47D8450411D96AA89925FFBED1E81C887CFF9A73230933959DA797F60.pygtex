@@ -1,0 +1,49 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} import pytest}
+\PYG{c+c1}{\PYGZsh{} from kandy\PYGZus{}kafka.exceptions import HostsFileHasWrongSyntax}
+\PYG{c+c1}{\PYGZsh{} from kandy\PYGZus{}kafka.config import Config}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} \PYGZsh{} TODO Make more exception (Specify whats wrong with config file/parametrs)}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} def test\PYGZus{}that\PYGZus{}error\PYGZus{}is\PYGZus{}raised\PYGZus{}if\PYGZus{}port\PYGZus{}is\PYGZus{}greater\PYGZus{}than\PYGZus{}65535():}
+\PYG{c+c1}{\PYGZsh{}     with pytest.raises(HostsFileHasWrongSyntax):}
+\PYG{c+c1}{\PYGZsh{}         Config(host=\PYGZdq{}localhost\PYGZdq{}, port=65536)}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} def test\PYGZus{}that\PYGZus{}error\PYGZus{}is\PYGZus{}raised\PYGZus{}if\PYGZus{}port\PYGZus{}is\PYGZus{}less\PYGZus{}than\PYGZus{}0():}
+\PYG{c+c1}{\PYGZsh{}     with pytest.raises(HostsFileHasWrongSyntax):}
+\PYG{c+c1}{\PYGZsh{}         Config(host=\PYGZdq{}localhost\PYGZdq{}, port=\PYGZhy{}1)}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} def test\PYGZus{}that\PYGZus{}error\PYGZus{}is\PYGZus{}raised\PYGZus{}if\PYGZus{}host\PYGZus{}is\PYGZus{}empty\PYGZus{}string():}
+\PYG{c+c1}{\PYGZsh{}     with pytest.raises(HostsFileHasWrongSyntax):}
+\PYG{c+c1}{\PYGZsh{}         Config(host=\PYGZdq{}\PYGZdq{}, port=9092)}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} def test\PYGZus{}that\PYGZus{}error\PYGZus{}is\PYGZus{}raised\PYGZus{}if\PYGZus{}host\PYGZus{}is\PYGZus{}not\PYGZus{}a\PYGZus{}string():}
+\PYG{c+c1}{\PYGZsh{}     with pytest.raises(HostsFileHasWrongSyntax):}
+\PYG{c+c1}{\PYGZsh{}         Config(host=1234, port=9092)}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} def test\PYGZus{}that\PYGZus{}error\PYGZus{}is\PYGZus{}raised\PYGZus{}if\PYGZus{}host\PYGZus{}is\PYGZus{}wrong\PYGZus{}ip\PYGZus{}format():}
+\PYG{c+c1}{\PYGZsh{}     with pytest.raises(HostsFileHasWrongSyntax):}
+\PYG{c+c1}{\PYGZsh{}         Config(host=\PYGZdq{}192.168.1\PYGZdq{}, port=9092)}
+\PYG{c+c1}{\PYGZsh{}         Config(host=\PYGZdq{}256.256.256.256\PYGZdq{}, port=9092)}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} def test\PYGZus{}that\PYGZus{}HostsWrongSyntax\PYGZus{}is\PYGZus{}raised\PYGZus{}if\PYGZus{}empty\PYGZus{}host():}
+\PYG{c+c1}{\PYGZsh{}     with pytest.raises(HostsFileHasWrongSyntax):}
+\PYG{c+c1}{\PYGZsh{}         Config(host=\PYGZdq{}\PYGZdq{}, port=9092)}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} @pytest.mark.parametrize(}
+\PYG{c+c1}{\PYGZsh{}     \PYGZdq{}host\PYGZdq{}, [\PYGZdq{}localhost\PYGZdq{}, \PYGZdq{}127.0.0.1\PYGZdq{}, \PYGZdq{}192.168.1.1\PYGZdq{}, \PYGZdq{}example.com\PYGZdq{}, \PYGZdq{}example.co.uk\PYGZdq{}]}
+\PYG{c+c1}{\PYGZsh{} )}
+\PYG{c+c1}{\PYGZsh{} def tests\PYGZus{}that\PYGZus{}cluster\PYGZus{}does\PYGZus{}not\PYGZus{}raise\PYGZus{}errors\PYGZus{}with\PYGZus{}valid\PYGZus{}hostnames(host):}
+\PYG{c+c1}{\PYGZsh{}     cluster = Config(host=host, port=9092)}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} def tests\PYGZus{}that\PYGZus{}cluster\PYGZus{}does\PYGZus{}not\PYGZus{}raise\PYGZus{}errors\PYGZus{}with\PYGZus{}correct\PYGZus{}ip():}
+\PYG{c+c1}{\PYGZsh{}     Config(host=\PYGZdq{}192.168.1.1\PYGZdq{}, port=9092)}
+\end{Verbatim}

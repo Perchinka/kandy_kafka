@@ -23,6 +23,14 @@ import re
 
 
 class BaseTable(DataTable):
+    """
+    Base class for creating custom datatables in the Textual UI with Vim keybindings support
+    and sorting functionality
+
+    Attributes:
+        sort_directions (dict): A dictionary to store the sorting direction of each column
+    """
+
     BINDINGS = [
         ("j", "cursor_down"),
         ("k", "cursor_up"),
@@ -36,7 +44,12 @@ class BaseTable(DataTable):
         self.sort_directions = {}
 
     def build_table(self, columns: List[Tuple[str, str]]):
-        """Build the DataTable for topics."""
+        """
+        Build the table (set necessary columns)
+
+        Args:
+            columns (List[Tuple[str, str]]): A list of tuples containing column names and keys
+        """
         self.cursor_type = "row"
         self.zebra_stripes = True
 
@@ -44,8 +57,13 @@ class BaseTable(DataTable):
             self.add_column(column_name, key=key)
 
     def update_rows(self, rows: List[List]):
-        """Update the table with the provided list of topics."""
-        self.clear()
+        """
+        Update the table
+
+        Args:
+            rows (List[List]): List of rows to add to the table
+        """
+        self.clear()  # Clear existing rows
 
         for row in rows:
             self.add_row(*row)
@@ -68,10 +86,17 @@ class BaseTable(DataTable):
 
 
 class MessagesTable(BaseTable):
+    """
+    Table for displaying Kafka messages
+    """
+
     def __init__(self) -> None:
         super().__init__("messages-table")
 
     def on_mount(self):
+        """
+        Build the table and set its border title on table creation
+        """
         self.build_table(
             [
                 ("Offset", "offset"),
@@ -84,14 +109,19 @@ class MessagesTable(BaseTable):
         self.border_title = "Messages"
 
     def update_messages(self, messages: List[KafkaMessage]):
-        """Update the table with the provided list of topics."""
+        """
+        Update the table with a list of Kafka messages
+
+        Args:
+            messages (List[KafkaMessage]): List of messages to display
+        """
         rows = []
         for message in messages:
             rows.append(
                 [
                     message.offset,
                     message.partition_id,
-                    None,
+                    None,  # Placeholder for timestamp
                     message.key,
                     message.value,
                 ]
@@ -101,10 +131,17 @@ class MessagesTable(BaseTable):
 
 
 class TopicsTable(BaseTable):
+    """
+    Table for displaying Kafka topics in the Textual UI
+    """
+
     def __init__(self) -> None:
         super().__init__("topics-table")
 
     def on_mount(self):
+        """
+        Build the table and set its border title on table creation
+        """
         self.build_table(
             [
                 ("Topic name", "name"),
@@ -116,7 +153,12 @@ class TopicsTable(BaseTable):
         self.border_title = "Topics"
 
     def update_topics(self, topics: List[Topic]):
-        """Update the table with the provided list of topics."""
+        """
+        Update the table with a list of Kafka topics
+
+        Args:
+            topics (List[Topic]): List of topics to display
+        """
         rows = []
         for topic in topics:
             rows.append(
@@ -127,11 +169,22 @@ class TopicsTable(BaseTable):
 
 
 class SearchHandler:
-    """Class responsible for filtering topics based on search queries."""
+    """
+    Class responsible for handling topic filtering based on search queries
+    """
 
     @staticmethod
     def filter_topics(topics: list[Topic], query: str) -> list[Topic]:
-        """Filter the list of topics based on the search query."""
+        """
+        Filter the list of topics based on a search query
+
+        Args:
+            topics (list[Topic]): List of topics to filter
+            query (str): Search query used for filtering topics
+
+        Returns:
+            list[Topic]: A filtered list of topics that match the search query
+        """
         if not query:
             return topics
         query = query.strip()
@@ -141,11 +194,22 @@ class SearchHandler:
 
 
 class TopicsView(Container):
+    """
+    Main view for displaying Kafka topics and messages in a two-pane layout
+
+    This view includes a sidebar, a search input field, and tables for topics and messages
+    """
+
     BINDINGS = [
-        ("ctrl+r", "reload", "reload"),
+        ("ctrl+r", "reload", "Reload topics"),
     ]
 
     def __init__(self, bootstraped: Bootstraped):
+        """
+
+        Args:
+            bootstraped (Bootstraped): An instance of Bootstraped that contains the Kafka adapter
+        """
         super().__init__()
         self.kafka_adapter = bootstraped.kafka_adapter
 
@@ -155,6 +219,11 @@ class TopicsView(Container):
         self.topics = []
 
     def compose(self) -> ComposeResult:
+        """
+
+        Returns:
+            ComposeResult: A generator that yields UI components for display
+        """
         yield Horizontal(
             Vertical(
                 ListView(
@@ -177,9 +246,15 @@ class TopicsView(Container):
         )
 
     def on_mount(self):
+        """
+        This method preloads the topics from the Kafka adapter on the first mount
+        """
         self.load_topics()
 
     def load_topics(self):
+        """
+        Load topics from the Kafka adapter and update the topics table
+        """
         topics = self.kafka_adapter.get_topics()
         # TODO separate filtering logic
         self.topics = topics  # Store the topics for later filtering
@@ -188,6 +263,12 @@ class TopicsView(Container):
 
     @work(thread=True)
     async def load_messages(self, topic_name):
+        """
+        Asynchronously load messages for the selected topic
+
+        Args:
+            topic_name (str): The name of the topic to load messages from
+        """
         logging.info("Loading messages")
         messages = self.kafka_adapter.get_messages(topic_name)
         logging.info("Got messages")
@@ -195,17 +276,31 @@ class TopicsView(Container):
         self.messages_table.loading = False
 
     async def on_input_changed(self, event):
-        """Called whenever the input in the search field changes."""
+        """
+        Handle changes to the search input field and filter topics accordingly
+
+        Args:
+            event: Event object containing information about the input change
+        """
         search_query = event.value.strip()
         filtered_topics = SearchHandler.filter_topics(self.topics, search_query)
         self.topics_table.update_topics(filtered_topics)
 
     @on(DataTable.RowSelected, "#topics-table")
     def handle_row_selected(self, message: DataTable.RowSelected):
+        """
+        Handle the event when a row in the topics table is selected (Enter was pressed)
+
+        Args:
+            message (DataTable.RowSelected): Event object containing information about the selected row
+        """
         self.messages_table.loading = True
         topic_name = message.data_table.get_cell(message.row_key, "name")
         self.load_messages(topic_name)
 
-    # Actions
+    # --------- Actions ----------
     def action_reload(self):
+        """
+        Action to reload the topics list (ctrl-R)
+        """
         self.load_topics()

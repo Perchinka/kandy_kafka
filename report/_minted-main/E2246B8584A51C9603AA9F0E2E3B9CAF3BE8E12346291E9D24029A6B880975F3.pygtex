@@ -1,0 +1,29 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.bootstrap} \PYG{k+kn}{import} \PYG{n}{Bootstrap}
+\PYG{k+kn}{import} \PYG{n+nn}{argparse}
+
+\PYG{k}{class} \PYG{n+nc}{ConditionalAction}\PYG{p}{(}\PYG{n}{argparse}\PYG{o}{.}\PYG{n}{Action}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}call\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{parser}\PYG{p}{,} \PYG{n}{namespace}\PYG{p}{,} \PYG{n}{values}\PYG{p}{,} \PYG{n}{option\PYGZus{}string}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{):}
+        \PYG{k}{if} \PYG{n}{namespace}\PYG{o}{.}\PYG{n}{clustername}\PYG{p}{:}
+            \PYG{n}{parser}\PYG{o}{.}\PYG{n}{error}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}clustername specified; \PYGZhy{}\PYGZhy{}host and \PYGZhy{}\PYGZhy{}port should not be used\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{setattr}\PYG{p}{(}\PYG{n}{namespace}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{dest}\PYG{p}{,} \PYG{n}{values}\PYG{p}{)}
+
+
+\PYG{k}{def} \PYG{n+nf}{main}\PYG{p}{():}
+    \PYG{n}{parser} \PYG{o}{=} \PYG{n}{argparse}\PYG{o}{.}\PYG{n}{ArgumentParser}\PYG{p}{(}\PYG{n}{description}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}Kandy Kafka\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{parser}\PYG{o}{.}\PYG{n}{add\PYGZus{}argument}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}clustername\PYGZdq{}}\PYG{p}{,} \PYG{n}{nargs}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}?\PYGZsq{}}\PYG{p}{,} \PYG{n+nb}{type}\PYG{o}{=}\PYG{n+nb}{str}\PYG{p}{,} \PYG{n}{help}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}Cluster Name\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{parser}\PYG{o}{.}\PYG{n}{add\PYGZus{}argument}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZhy{}host\PYGZdq{}}\PYG{p}{,} \PYG{n+nb}{type}\PYG{o}{=}\PYG{n+nb}{str}\PYG{p}{,} \PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{help}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}Host\PYGZsq{}}\PYG{p}{,} \PYG{n}{action}\PYG{o}{=}\PYG{n}{ConditionalAction}\PYG{p}{)}
+    \PYG{n}{parser}\PYG{o}{.}\PYG{n}{add\PYGZus{}argument}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZhy{}port\PYGZdq{}}\PYG{p}{,} \PYG{n+nb}{type}\PYG{o}{=}\PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{help}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}Port\PYGZsq{}}\PYG{p}{,} \PYG{n}{action}\PYG{o}{=}\PYG{n}{ConditionalAction}\PYG{p}{)}
+
+    \PYG{n}{args} \PYG{o}{=} \PYG{n}{parser}\PYG{o}{.}\PYG{n}{parse\PYGZus{}args}\PYG{p}{()}
+
+    \PYG{k}{if} \PYG{n}{args}\PYG{o}{.}\PYG{n}{clustername} \PYG{o+ow}{and} \PYG{p}{(}\PYG{n}{args}\PYG{o}{.}\PYG{n}{host} \PYG{o+ow}{or} \PYG{n}{args}\PYG{o}{.}\PYG{n}{port}\PYG{p}{):}
+        \PYG{n}{parser}\PYG{o}{.}\PYG{n}{error}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Clustername specified; \PYGZhy{}\PYGZhy{}host and \PYGZhy{}\PYGZhy{}port should not be used\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{if} \PYG{o+ow}{not} \PYG{n}{args}\PYG{o}{.}\PYG{n}{clustername} \PYG{o+ow}{and} \PYG{p}{(}\PYG{o+ow}{not} \PYG{n}{args}\PYG{o}{.}\PYG{n}{host} \PYG{o+ow}{or} \PYG{o+ow}{not} \PYG{n}{args}\PYG{o}{.}\PYG{n}{port}\PYG{p}{):}
+        \PYG{n}{parser}\PYG{o}{.}\PYG{n}{error}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}If clustername is not specified, both \PYGZhy{}\PYGZhy{}host and \PYGZhy{}\PYGZhy{}port must be provided\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n}{Bootstrap}\PYG{p}{()(}\PYG{n}{clustername}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{clustername}\PYG{p}{,} \PYG{n}{host}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{host}\PYG{p}{,} \PYG{n}{port}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{port}\PYG{p}{)}
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZsq{}}\PYG{p}{:}
+    \PYG{n}{main}\PYG{p}{()}
+\end{Verbatim}

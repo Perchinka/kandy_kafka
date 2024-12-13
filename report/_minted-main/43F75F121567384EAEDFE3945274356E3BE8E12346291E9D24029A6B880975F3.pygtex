@@ -1,0 +1,20 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} Correct syntax scenario}
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{n+nd}{@given}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Configuration file has valid syntax\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{config\PYGZus{}file\PYGZus{}with\PYGZus{}correct\PYGZus{}syntax}\PYG{p}{(}\PYG{n}{config\PYGZus{}file}\PYG{p}{):}
+    \PYG{n}{config\PYGZus{}file}\PYG{o}{.}\PYG{n}{write\PYGZus{}text}\PYG{p}{(}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        default:}
+\PYG{l+s+sd}{            host: localhost}
+\PYG{l+s+sd}{            port: 9092}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{p}{)}
+
+
+\PYG{n+nd}{@then}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}config should have valid connection details\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{check\PYGZus{}config\PYGZus{}details}\PYG{p}{(}\PYG{n}{config}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{p}{):}
+    \PYG{n}{config}\PYG{o}{.}\PYG{n}{load\PYGZus{}hosts}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}default\PYGZdq{}}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{p}{)}
+    \PYG{k}{assert} \PYG{n}{config}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}localhost\PYGZdq{}}
+    \PYG{k}{assert} \PYG{n}{config}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT} \PYG{o}{==} \PYG{l+m+mi}{9092}
+\end{Verbatim}

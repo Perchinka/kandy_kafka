@@ -1,0 +1,6 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{Scenario:}\PYG{n+nf}{ Error when no configuration file is found}
+\PYG{k}{  Given }\PYG{n+nf}{Configuration file is not present}
+\PYG{n+nf}{  }\PYG{k}{When }\PYG{n+nf}{system loads config}
+\PYG{n+nf}{  }\PYG{k}{Then }\PYG{n+nf}{application should prompt user to create or specify a configuration file}
+\end{Verbatim}

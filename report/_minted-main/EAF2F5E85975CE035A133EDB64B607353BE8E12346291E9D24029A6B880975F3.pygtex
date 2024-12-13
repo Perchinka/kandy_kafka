@@ -1,0 +1,20 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} kandy\PYGZus{}kafka/config.py}
+
+\PYG{k+kn}{import} \PYG{n+nn}{os}
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka} \PYG{k+kn}{import} \PYG{n}{logger}
+
+
+\PYG{k}{class} \PYG{n+nc}{Config}\PYG{p}{:}
+    \PYG{n}{LOGGING\PYGZus{}LEVEL}\PYG{p}{:} \PYG{n+nb}{str}
+
+    \PYG{n}{KAFKA\PYGZus{}HOST}\PYG{p}{:} \PYG{n+nb}{str}
+    \PYG{n}{KAFKA\PYGZus{}PORT}\PYG{p}{:} \PYG{n+nb}{int}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{k+kc}{None}\PYG{p}{:}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{LOGGING\PYGZus{}LEVEL} \PYG{o}{=} \PYG{n}{os}\PYG{o}{.}\PYG{n}{getenv}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}LOGGING\PYGZus{}LEVEL\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}INFO\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{logger}\PYG{o}{.}\PYG{n}{setup\PYGZus{}logger}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{LOGGING\PYGZus{}LEVEL}\PYG{p}{)}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST} \PYG{o}{=} \PYG{n}{os}\PYG{o}{.}\PYG{n}{getenv}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}KAFKA\PYGZus{}HOST\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}localhost\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{os}\PYG{o}{.}\PYG{n}{getenv}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}KAFKA\PYGZus{}PORT\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{9092}\PYG{p}{))}
+\end{Verbatim}

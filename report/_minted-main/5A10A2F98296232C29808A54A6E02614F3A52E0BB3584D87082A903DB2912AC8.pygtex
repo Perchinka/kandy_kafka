@@ -1,0 +1,32 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{confluent\PYGZus{}kafka} \PYG{k+kn}{import} \PYG{n}{Consumer}
+\PYG{k+kn}{import} \PYG{n+nn}{pytest}
+
+
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{k}{def} \PYG{n+nf}{create\PYGZus{}test\PYGZus{}topic}\PYG{p}{():}
+    \PYG{k}{def} \PYG{n+nf}{\PYGZus{}create\PYGZus{}test\PYGZus{}topic}\PYG{p}{(}\PYG{n}{bootstrap\PYGZus{}servers}\PYG{p}{,} \PYG{n}{topic\PYGZus{}name}\PYG{p}{):}
+        \PYG{n}{consumer} \PYG{o}{=} \PYG{n}{Consumer}\PYG{p}{(}
+            \PYG{p}{\PYGZob{}}
+                \PYG{l+s+s2}{\PYGZdq{}bootstrap.servers\PYGZdq{}}\PYG{p}{:} \PYG{n}{bootstrap\PYGZus{}servers}\PYG{p}{,}
+            \PYG{p}{\PYGZcb{}}
+        \PYG{p}{)}
+        \PYG{n}{consumer}\PYG{o}{.}\PYG{n}{subscribe}\PYG{p}{([}\PYG{n}{topic\PYGZus{}name}\PYG{p}{])}
+        \PYG{n}{consumer}\PYG{o}{.}\PYG{n}{poll}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}
+        \PYG{n}{consumer}\PYG{o}{.}\PYG{n}{close}\PYG{p}{()}
+
+    \PYG{k}{return} \PYG{n}{\PYGZus{}create\PYGZus{}test\PYGZus{}topic}
+
+
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{k}{def} \PYG{n+nf}{consumer}\PYG{p}{(}\PYG{n}{server}\PYG{p}{):}
+    \PYG{n}{consumer} \PYG{o}{=} \PYG{n}{Consumer}\PYG{p}{(}
+        \PYG{p}{\PYGZob{}}
+            \PYG{l+s+s2}{\PYGZdq{}bootstrap.servers\PYGZdq{}}\PYG{p}{:} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{server}\PYG{o}{.}\PYG{n}{HOST}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{:}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{server}\PYG{o}{.}\PYG{n}{PORT}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,}
+            \PYG{l+s+s2}{\PYGZdq{}group.id\PYGZdq{}}\PYG{p}{:} \PYG{l+s+s2}{\PYGZdq{}test\PYGZhy{}group\PYGZdq{}}\PYG{p}{,}
+            \PYG{l+s+s2}{\PYGZdq{}auto.offset.reset\PYGZdq{}}\PYG{p}{:} \PYG{l+s+s2}{\PYGZdq{}earliest\PYGZdq{}}\PYG{p}{,}
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{)}
+    \PYG{k}{yield} \PYG{n}{consumer}
+    \PYG{n}{consumer}\PYG{o}{.}\PYG{n}{close}\PYG{p}{()}
+\end{Verbatim}

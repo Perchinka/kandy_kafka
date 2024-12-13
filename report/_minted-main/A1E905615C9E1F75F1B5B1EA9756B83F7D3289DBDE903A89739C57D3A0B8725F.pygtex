@@ -1,0 +1,66 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+2024\PYGZhy{}10\PYGZhy{}21:11:53:47,797 INFO     [bootstrap.py:26] ATTEMPTING TO BOOTSTRAP \PYGZhy{} creating KafkaAdapter
+2024\PYGZhy{}10\PYGZhy{}21:11:53:49,508 INFO     [topics.py:191] Loading messages
+2024\PYGZhy{}10\PYGZhy{}21:11:53:49,508 INFO     [kafka\PYGZus{}adapter.py:85] Start polling messages
+2024\PYGZhy{}10\PYGZhy{}21:11:53:49,524 INFO     [kafka\PYGZus{}adapter.py:103] Partition 0: Low: 0, High: 81
+2024\PYGZhy{}10\PYGZhy{}21:11:53:53,82 INFO     [kafka\PYGZus{}adapter.py:151] Reached limit of 50 messages. Stopping.
+2024\PYGZhy{}10\PYGZhy{}21:11:53:53,82 INFO     [kafka\PYGZus{}adapter.py:155] End polling messages for topic: test\PYGZhy{}topic\PYGZhy{}wxvlkd
+2024\PYGZhy{}10\PYGZhy{}21:11:53:53,82 INFO     [topics.py:193] Got messages
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,381 INFO     [topics.py:191] Loading messages
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,381 INFO     [kafka\PYGZus{}adapter.py:85] Start polling messages
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,636 INFO     [kafka\PYGZus{}adapter.py:103] Partition 0: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,644 INFO     [kafka\PYGZus{}adapter.py:103] Partition 1: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,647 INFO     [kafka\PYGZus{}adapter.py:103] Partition 2: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,649 INFO     [kafka\PYGZus{}adapter.py:103] Partition 3: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,651 INFO     [kafka\PYGZus{}adapter.py:103] Partition 4: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,654 INFO     [kafka\PYGZus{}adapter.py:103] Partition 5: Low: 0, High: 36
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,657 INFO     [kafka\PYGZus{}adapter.py:103] Partition 6: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,659 INFO     [kafka\PYGZus{}adapter.py:103] Partition 7: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,662 INFO     [kafka\PYGZus{}adapter.py:103] Partition 8: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,664 INFO     [kafka\PYGZus{}adapter.py:103] Partition 9: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,667 INFO     [kafka\PYGZus{}adapter.py:103] Partition 10: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,669 INFO     [kafka\PYGZus{}adapter.py:103] Partition 11: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,671 INFO     [kafka\PYGZus{}adapter.py:103] Partition 12: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,674 INFO     [kafka\PYGZus{}adapter.py:103] Partition 13: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,674 INFO     [kafka\PYGZus{}adapter.py:103] Partition 14: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,675 INFO     [kafka\PYGZus{}adapter.py:103] Partition 15: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,675 INFO     [kafka\PYGZus{}adapter.py:103] Partition 16: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,676 INFO     [kafka\PYGZus{}adapter.py:103] Partition 17: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,676 INFO     [kafka\PYGZus{}adapter.py:103] Partition 18: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,676 INFO     [kafka\PYGZus{}adapter.py:103] Partition 19: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,676 INFO     [kafka\PYGZus{}adapter.py:103] Partition 20: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,677 INFO     [kafka\PYGZus{}adapter.py:103] Partition 21: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,677 INFO     [kafka\PYGZus{}adapter.py:103] Partition 22: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,677 INFO     [kafka\PYGZus{}adapter.py:103] Partition 23: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,677 INFO     [kafka\PYGZus{}adapter.py:103] Partition 24: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,678 INFO     [kafka\PYGZus{}adapter.py:103] Partition 25: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,678 INFO     [kafka\PYGZus{}adapter.py:103] Partition 26: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,678 INFO     [kafka\PYGZus{}adapter.py:103] Partition 27: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,678 INFO     [kafka\PYGZus{}adapter.py:103] Partition 28: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,679 INFO     [kafka\PYGZus{}adapter.py:103] Partition 29: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,679 INFO     [kafka\PYGZus{}adapter.py:103] Partition 30: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,679 INFO     [kafka\PYGZus{}adapter.py:103] Partition 31: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,679 INFO     [kafka\PYGZus{}adapter.py:103] Partition 32: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,680 INFO     [kafka\PYGZus{}adapter.py:103] Partition 33: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,680 INFO     [kafka\PYGZus{}adapter.py:103] Partition 34: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,680 INFO     [kafka\PYGZus{}adapter.py:103] Partition 35: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,681 INFO     [kafka\PYGZus{}adapter.py:103] Partition 36: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,681 INFO     [kafka\PYGZus{}adapter.py:103] Partition 37: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,682 INFO     [kafka\PYGZus{}adapter.py:103] Partition 38: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,682 INFO     [kafka\PYGZus{}adapter.py:103] Partition 39: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,682 INFO     [kafka\PYGZus{}adapter.py:103] Partition 40: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,683 INFO     [kafka\PYGZus{}adapter.py:103] Partition 41: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,683 INFO     [kafka\PYGZus{}adapter.py:103] Partition 42: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,683 INFO     [kafka\PYGZus{}adapter.py:103] Partition 43: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,684 INFO     [kafka\PYGZus{}adapter.py:103] Partition 44: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,684 INFO     [kafka\PYGZus{}adapter.py:103] Partition 45: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,684 INFO     [kafka\PYGZus{}adapter.py:103] Partition 46: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,685 INFO     [kafka\PYGZus{}adapter.py:103] Partition 47: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,685 INFO     [kafka\PYGZus{}adapter.py:103] Partition 48: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:42,685 INFO     [kafka\PYGZus{}adapter.py:103] Partition 49: Low: 0, High: 0
+2024\PYGZhy{}10\PYGZhy{}21:11:57:44,259 INFO     [kafka\PYGZus{}adapter.py:118] All partitions have been fully consumed. Stopping.
+2024\PYGZhy{}10\PYGZhy{}21:11:57:44,259 INFO     [kafka\PYGZus{}adapter.py:155] End polling messages for topic: \PYGZus{}\PYGZus{}consumer\PYGZus{}offsets
+2024\PYGZhy{}10\PYGZhy{}21:11:57:44,259 INFO     [topics.py:193] Got messages
+2024\PYGZhy{}10\PYGZhy{}21:11:57:53,325 INFO     [bootstrap.py:38] BOOTSTRAPING Completed
+2024\PYGZhy{}10\PYGZhy{}21:12:17:02,186 INFO     [bootstrap.py:26] ATTEMPTING TO BOOTSTRAP \PYGZhy{} creating KafkaAdapter
+\end{Verbatim}
