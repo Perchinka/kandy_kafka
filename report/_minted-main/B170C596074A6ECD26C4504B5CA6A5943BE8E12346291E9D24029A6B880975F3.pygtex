@@ -1,0 +1,27 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{def} \PYG{n+nf}{load\PYGZus{}hosts}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{clustername}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}default\PYGZdq{}}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{):}
+    \PYG{k}{if} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{o}{.}\PYG{n}{exists}\PYG{p}{():}
+        \PYG{k}{raise} \PYG{n}{HostsFileNotFound}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Hosts file }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ not found\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{k}{if} \PYG{n}{config\PYGZus{}file}\PYG{p}{:}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file} \PYG{o}{=} \PYG{n}{config\PYGZus{}file}
+
+    \PYG{k}{with} \PYG{n+nb}{open}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}r\PYGZdq{}}\PYG{p}{)} \PYG{k}{as} \PYG{n}{file}\PYG{p}{:}
+        \PYG{n}{hosts} \PYG{o}{=} \PYG{n}{yaml}\PYG{o}{.}\PYG{n}{safe\PYGZus{}load}\PYG{p}{(}\PYG{n}{file}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{hosts} \PYG{o+ow}{is} \PYG{k+kc}{None}\PYG{p}{:}
+            \PYG{k}{raise} \PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Hosts file }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ is empty\PYGZdq{}}\PYG{p}{)}
+
+        \PYG{k}{if} \PYG{n}{clustername} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{hosts}\PYG{p}{:}
+            \PYG{k}{raise} \PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{(}
+                \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Clustername }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{clustername}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ not found in }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}
+            \PYG{p}{)}
+
+        \PYG{n}{cluster} \PYG{o}{=} \PYG{n}{hosts}\PYG{p}{[}\PYG{n}{clustername}\PYG{p}{]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST} \PYG{o}{=} \PYG{n}{cluster}\PYG{o}{.}\PYG{n}{get}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}host\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT} \PYG{o}{=} \PYG{n}{cluster}\PYG{o}{.}\PYG{n}{get}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}port\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{k}{if} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST} \PYG{o+ow}{or} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT}\PYG{p}{:}
+        \PYG{k}{raise} \PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{(}
+            \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Host or port not found in }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}
+        \PYG{p}{)}
+\end{Verbatim}

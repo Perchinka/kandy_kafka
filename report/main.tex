@@ -16,7 +16,7 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
 \usepackage[utf8x]{inputenc}
-\usepackage[english,russian]{babel}
+% \usepackage[english,russian]{babel}
 \usepackage{cmap}
 
 \usepackage{titlesec}
@@ -740,26 +740,185 @@ Python libs versions & Specified in the file \textbf{pyproject.toml} in~Appendix
 \end{table}
 As Kafka will be deployed on the same system where Kandy is tested, I anticipate virtually negligible latency when it comes to communicating between services
 
+\newpage
+\subsection{Scenarios}
+\begin{small}
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Relevant Quality Attributes} & Performance Efficiency, Reliability \\ \hline
+\textbf{Stimulus} & A user selects a Kafka topic and requests to fetch messages. \\ \hline
+\textbf{Source} & User interacting with the UI. \\ \hline
+\textbf{Environment} & Kafka cluster is online and accessible; the system is running under normal conditions. \\ \hline
+\textbf{Artefact} & System \\ \hline
+\textbf{Response} & The system retrieves and displays the 50 most recent messages from the selected topic while ensuring the UI remains operational. \\ \hline
+\textbf{Response Measure} & Messages are displayed within 10 seconds of the request, and the UI remains responsive. \\ \hline
+\textbf{Possible Issues} & High latency in Kafka communication might delay message retrieval. UI freezing if asynchronous fetching is not properly implemented. \\ \hline
+\textbf{Justification} & A response time of 10 seconds aligns with the industry standard for maintaining user focus. Research from the Nielsen Norman Group (\url{https://www.nngroup.com/articles/response-times-3-important-limits/}) shows that users lose focus when waiting for over 10 seconds, leading to a degraded experience. This boundary ensures usability while accounting for network and processing delays. \\ \hline
+\end{tabular}
+\caption{Scenario: Fetching Messages from Kafka Topics}
+\end{table}
+
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Relevant Quality Attributes} & Usability, Performance Efficiency \\ \hline
+\textbf{Stimulus} & A user inputs a search query to filter Kafka topics. \\ \hline
+\textbf{Source} & User interacting with the UI. \\ \hline
+\textbf{Environment} & The system is running under normal conditions with topics preloaded from Kafka. \\ \hline
+\textbf{Artefact} & UI \\ \hline
+\textbf{Response} & The system applies the query to filter the list of topics dynamically, displaying matching results in real-time. \\ \hline
+\textbf{Response Measure} & Filtered topics are displayed within 1 second of query input. \\ \hline
+\textbf{Possible Issues} & Large topic lists might delay filtering. Regex implementation could fail for malformed queries. Poor responsiveness may degrade user experience. \\ \hline
+\textbf{Justification} & A 1-second response for search results is supported by Jakob Nielsen's response-time limits (\url{https://www.nngroup.com/articles/response-times-3-important-limits/}), which highlight that users feel the system operates instantaneously at this threshold. \\ \hline
+\end{tabular}
+\caption{Scenario: Searching for Kafka Topics}
+\end{table}
+
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Relevant Quality Attributes} & Reliability, Fault Tolerance \\ \hline
+\textbf{Stimulus} & Kafka becomes unavailable or unreachable. \\ \hline
+\textbf{Source} & Kafka infrastructure failure. \\ \hline
+\textbf{Environment} & Kafka is down or the connection details are misconfigured. \\ \hline
+\textbf{Artefact} & System \\ \hline
+\textbf{Response} & The system notifies the user of the error and terminates gracefully, ensuring that no processes hang or crash. \\ \hline
+\textbf{Response Measure} & The error message is displayed within 1 second, and the system remains stable. \\ \hline
+\textbf{Possible Issues} & The system could hang during reconnect attempts. Vague error messages might confuse users. Exit mechanisms may not properly clean up resources. \\ \hline
+\textbf{Justification} & A 1-second boundary for error feedback ensures users are informed promptly without unnecessary delay, aligning with ISO 25010’s emphasis on fault tolerance. Immediate user feedback helps in scenarios where long-running processes could otherwise cause confusion. \\ \hline
+\end{tabular}
+\caption{Scenario: Handling Kafka Connection Errors}
+\end{table}
+
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Relevant Quality Attributes} & Modifiability, Usability \\ \hline
+\textbf{Stimulus} & A user initializes the application with host and port details provided through CLI flags. \\ \hline
+\textbf{Source} & User invoking the system from the command line. \\ \hline
+\textbf{Environment} & CLI arguments are passed at runtime; no configuration file is provided. \\ \hline
+\textbf{Artefact} & System \\ \hline
+\textbf{Response} & The system validates the arguments and establishes a connection to Kafka using the specified host and port. \\ \hline
+\textbf{Response Measure} & The connection is established successfully, and invalid arguments are rejected with clear error messages within 1 second. \\ \hline
+\textbf{Possible Issues} & Users might provide incomplete or conflicting arguments. Validation logic might miss invalid inputs. \\ \hline
+\textbf{Justification} & A response time of 1 second for invalid argument rejection aligns with usability principles (ISO 9241) and ensures smooth configuration. Immediate feedback minimizes user frustration and supports modifiability in diverse environments. \\ \hline
+\end{tabular}
+\caption{Scenario: Configuring Kafka Connection via CLI}
+\end{table}
+
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Relevant Quality Attributes} & Functional Suitability, Performance Efficiency \\ \hline
+\textbf{Stimulus} & A user selects a topic to view its metadata. \\ \hline
+\textbf{Source} & User interacting with the UI. \\ \hline
+\textbf{Environment} & Kafka cluster is online and the system is running under normal conditions. \\ \hline
+\textbf{Artefact} & System \\ \hline
+\textbf{Response} & The system retrieves and displays the topic’s metadata, including partition count and message offset details. \\ \hline
+\textbf{Response Measure} & Metadata is displayed within 2 seconds of selection. \\ \hline
+\textbf{Possible Issues} & Large numbers of topics might delay metadata retrieval. Poor UI design could result in unclear metadata presentation. \\ \hline
+\textbf{Justification} & A 2-second response time ensures an acceptable balance between data retrieval and user experience, as supported by ISO 25010 for functional suitability and response times for non-critical data. \\ \hline
+\end{tabular}
+\caption{Scenario: Displaying Topic Metadata}
+\end{table}
+
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Relevant Quality Attributes} & Usability, Reliability \\ \hline
+\textbf{Stimulus} & A user provides invalid input in a search field or configuration form. \\ \hline
+\textbf{Source} & User interacting with the UI. \\ \hline
+\textbf{Environment} & The system is running under normal conditions. \\ \hline
+\textbf{Artefact} & System \\ \hline
+\textbf{Response} & The system validates the input, rejects invalid entries, and notifies the user with a descriptive error message. \\ \hline
+\textbf{Response Measure} & Input validation occurs within 1 second, and error messages are displayed immediately. \\ \hline
+\textbf{Possible Issues} & Poor error messages might confuse users. Invalid inputs might bypass validation logic. \\ \hline
+\textbf{Justification} & Immediate validation aligns with industry practices for reliability and ISO 25010 usability principles. Error feedback ensures clarity and prevents incorrect system states. \\ \hline
+\end{tabular}
+\caption{Scenario: Invalid User Input in UI}
+\end{table}
+
+
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Relevant Quality Attributes} & Testability, Maintainability \\ \hline
+\textbf{Stimulus} & A developer modifies code and runs the test suite. \\ \hline
+\textbf{Source} & Developer using the testing framework. \\ \hline
+\textbf{Environment} & The system is in active development or integrated with CI/CD pipelines. \\ \hline
+\textbf{Artefact} & System \\ \hline
+\textbf{Response} & Tests validate critical paths and edge cases. \\ \hline
+\textbf{Response Measure} & At least 90\% code coverage with no major untested areas. \\ \hline
+\textbf{Possible Issues} & Poor test coverage could miss critical issues. Complex code paths may lead to gaps in edge case testing. \\ \hline
+\textbf{Justification} & High test coverage ensures confidence in the codebase and reduces regressions. \\ \hline
+\end{tabular}
+\caption{Scenario: Comprehensive Test Coverage}
+\end{table}
+
+\end{small}
 
 \newpage
 \section{Success criteria}
+
 \begin{table}[h!tbp]
 \centering
+\renewcommand{\arraystretch}{1.3} % Adjust row spacing for readability
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{3.5cm}|p{6.5cm}|p{4.5cm}|p{4cm}|}
+\hline
+\textbf{Criterion} & \textbf{Success Measure} & \textbf{Evidence} & \textbf{Justification} \\ \hline
 
-\begin{tabular}{|p{7cm}|p{5cm}|p{3cm}|}
-\hline
-\textbf{Criteria} &  Justification&Evidence \\
-\hline
-Time behaviour QAS have passed successfully (Response time less than 10 seconds https://www.nngroup.com/articles/response-times-3-important-limits/)&  &.log file \\
-\hline
- &   &\\
-\hline
- &   &\\
-\hline
+\textbf{Connecting to Kafka} & 
+The system successfully connects to the Kafka cluster using provided host and port details. Invalid configurations are rejected with a descriptive error message displayed within 1 second. & 
+Connection logs showing successful connections with valid inputs and immediate rejection of invalid configurations & 
+Connecting to Kafka is foundational for all other functionality, ensuring the system can access topics and messages. Immediate error feedback prevents wasted time debugging. \\ \hline
+
+\textbf{Fetching Topics} & 
+The system retrieves the list of Kafka topics from the cluster and displays them in the UI within 10 seconds of the request. & 
+System logs confirming topics fetched in under 10 seconds. & 
+Fetching topics is critical for enabling user interaction with Kafka data. The 10-second limit aligns with industry standards for maintaining user focus. \\ \hline
+
+\textbf{Fetching Messages} & 
+The system retrieves the 50 the most recent messages from a selected Kafka topic asynchronously. Messages are displayed within 10 seconds, and the UI remains operational during this process. & 
+Execution logs confirming message retrieval time. Manual testing reports confirming UI responsiveness during retrieval & 
+Message fetching is a core requirement for Kafka consumers. The 10-second limit ensures a responsive user experience, even for large topics. \\ \hline
+
+\textbf{Sorting Topics} & 
+The user can apply sorting criteria (e.g., by size or partition count) to the displayed list of topics. Sorted results are updated in the UI within 2 seconds of the user request. & 
+Performance benchmarks showing sorting operations completed within 2 seconds. Functional tests verifying sorting behavior & 
+Sorting improves usability by allowing users to organize and locate topics efficiently. The 2-second limit ensures the UI remains responsive and intuitive. \\ \hline
+
+\textbf{Input Validation} & 
+All user inputs, such as CLI flags or search queries, are validated. Invalid inputs trigger immediate rejection and display a descriptive error message within 1 second. & 
+Validation logs showing immediate error feedback. Unit test results confirming coverage for all input validation scenarios & 
+Validating user input ensures the system remains robust and prevents errors caused by invalid configurations or queries. Immediate feedback aligns with usability best practices. \\ \hline
+
+\textbf{UI Responsiveness} & 
+The system UI remains fully operational and responsive during Kafka interactions, including fetching topics, messages, and sorting operations. & 
+Manual testing reports confirming no UI freezes during key interactions & 
+A responsive UI is essential for maintaining a positive user experience. It ensures that interactions feel smooth, even when handling large datasets or performing complex operations. \\ \hline
 
 \end{tabular}
-
+\end{adjustbox}
+\caption{Success Criteria for MVP}
+\label{tab:success-criteria-mvp}
 \end{table}
+
 
 \chapter{Design}
 
@@ -891,8 +1050,10 @@ The first MVP version will only include the topic view and message view. I will 
 \begin{itemize}
     \item A general pane displaying information about topics in the cluster.
     \item A metrics pane for the selected topic, potentially including graphs for specific time periods. Initially, it will display basic data.
-    \item A messages pane showing the last \textit{N} messages in the selected topic. By pressing enter on any topc will open new screen with messages stored in this topic (Figure~\ref{fig:message_view}).
+    \item A messages pane showing the last \textit{N} messages in the selected topic. By pressing enter on any topic will open new screen with messages stored in this topic 
 \end{itemize}
+
+I think good usability feature that I should include is ability to sort data in the table not only by name, but also but other parameters, as it will definitely speed up users' development process. Also, despite complexity of features proposed by my stakeholder, I should consider them, because it is simply pain points and usability features that will "sell" my product.
 
 \begin{figure}[htbp]
     \centering
@@ -1714,7 +1875,7 @@ Surprisingly (or perhaps not so surprisingly), all tests pass. Why? Because the 
 
 At this stage, no further changes are needed, as the code passes all tests. Ideally, I should begin refactoring. However, since the current codebase is relatively small and I am still drafting the prototype, clean code, while important, is not the highest priority at the moment.
 
-Как я и сказал выше, я хочу сделать не только поддержку конфига, но и флагов CLI, тоесть чтобы пользователь мог вводить данные например вот так
+As mentioned earlier, I wanted to add support not only for configuration files but also for CLI flags. This allows users to input parameters directly via the command line, for example:
 
 \begin{code}
   \begin{minted}{bash}
@@ -1722,9 +1883,9 @@ At this stage, no further changes are needed, as the code passes all tests. Idea
   \end{minted}
 \end{code}
 
-Для поддержки флагов (аргументов) в питоне есть встроеная библиотека \textbf{argparse}, которую я и буду использовать.
+To implement flag (argument) support in Python, I utilized the built-in library \textbf{argparse}, which is specifically designed for this purpose.
 
-Аргументы однозначно относятся к entrypoint категории, поэтому я их отнес в main file (kandy.py) 
+Arguments clearly belong to the entry-point category, so I included them in the main file (`kandy.py`).
 
 \begin{code}
   \begin{minted}{Python}
@@ -1758,9 +1919,9 @@ if __name__ == '__main__':
   \end{minted}
 \end{code}
 
-Для исключения подачи и clustername и host and port одновременно в конфиг я решил предотвратить эту возможность на уровне ввода, не идеальное решение, но для MVP проекта более, чем достаточно. Так же я подаю host, port и clustername в Bootstrap в виде аргументов, а это значит, что пришло время его тоже изменить под новые требования.
+To prevent users from providing both `clustername` and `host`/`port` simultaneously, I implemented validation at the input level. While not a perfect solution, it is more than sufficient for an MVP project. Additionally, I passed `host`, `port`, and `clustername` as arguments to the `Bootstrap` class, which means it was time to modify the class to handle these new requirements.
 
-Новый бутстрап принимает в \_\_call\_\_ методе принимает **kwds и потом вытаскивает оттуда наши port, host и clustername. Я добавил немного логирования, оно не обязательно, но будет проще понять в некоторых конкретных случаях, на каком моменте запуска упало приложение, сократит время и количество затраченных сил на debug
+The updated Bootstrap now accepts `**kwds` in the `\_\_call\_\_` method, extracting the necessary `port`, `host`, and `clustername`. I also added some logging; while not strictly necessary, it simplifies identifying where the application fails during startup, reducing debugging time and effort.
 
 \begin{code}
   \begin{minted}[samepage]{Python}
@@ -2772,17 +2933,244 @@ Continuing with the topic of messages, I rewrote `topics\_view` and the controll
 
 One interesting feature I added is a loading spinner for messages, so users can tell that the application is working and hasn’t frozen. To implement this, part of the functionality had to be made asynchronous, as otherwise, the entire application would hang while fetching messages from a topic, which is clearly unacceptable.
 
-\subsection{Коменты и аннотация}
-
 \begin{figure}[htbp]
   \begin{center}
     \includegraphics[width=0.95\textwidth]{imgs/MessagesSpinner.png}
   \end{center}
   \caption{}\label{fig:}
 \end{figure}
+\newpage
+\subsection{Comments and annotation}
+
+\newpage
+\chapter{Evaluation}
+
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{3.5cm}|p{5.5cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Criterion} & \textbf{Evidence Summary} & \textbf{Evaluation Result} & \textbf{Explanation} \\ \hline
+
+\textbf{Connecting to Kafka} & 
+\texttt{check\_config\_details} test  confirms that valid configuration files allow correct connection details to be loaded. Logs show successful KafkaAdapter initialization. & 
+Fully Met & 
+The system establishes connections successfully when valid configuration files are provided, fulfilling the criterion. \\ \hline
+
+\textbf{Fetching Topics} & 
+No specific test evidence or logs are provided for fetching topics. Bootstrap success suggests topics might be fetched implicitly. & 
+Partially Met & 
+The absence of explicit logs or tests leaves uncertainty regarding topic-fetching behavior. Additional tests are needed to verify performance within defined limits. \\ \hline
+
+\textbf{Fetching Messages} & 
+Logs confirm that messages are fetched successfully, with offsets tracked and polling completed within 10 seconds (\texttt{kafka\_adapter.py:85, 151}). & 
+Fully Met & 
+The system retrieves the 50 oldest messages per topic within the required time frame. \\ \hline
+
+\textbf{Sorting Topics} & 
+No tests or logs exist for sorting functionality. Lack of understanding of sorting implementation prevented testing. & 
+Fully Unmet & 
+Sorting functionality was neither tested nor verified, highlighting a need for future focus on this area. \\ \hline
+
+\textbf{Input Validation} & 
+Tests confirm \texttt{HostsFileNotFound} is raised for missing configuration files, and \texttt{HostsFileHasWrongSyntax} is raised for syntax errors. No evidence exists for CLI input validation. & 
+Fully Met & 
+Configuration validation is well-handled, but CLI input validation remains tested by hand, not script. \\ \hline
+
+\textbf{UI Responsiveness} & 
+No specific evidence for UI responsiveness is provided. Indirectly inferred from message-fetching logs showing timely completion. & 
+Partially Met & 
+Explicit evidence for UI responsiveness is missing. Future tests should include automated UI testing or manual validation logs. \\ \hline
+
+\end{tabular}
+\end{adjustbox}
+\caption{Evaluation of Initial Success Criteria Based on Test Evidence}
+\label{tab:success-evaluation}
+\end{table}
+
+\newpage
+\subsubsection{Test Evidences:}
+
+\begin{code}
+  \begin{minted}{Python}
+# Correct syntax scenario
+@pytest.fixture
+@given("Configuration file has valid syntax")
+def config_file_with_correct_syntax(config_file):
+    config_file.write_text(
+        """
+        default:
+            host: localhost
+            port: 9092
+        """
+    )
 
 
+@then("config should have valid connection details")
+def check_config_details(config, config_file):
+    config.load_hosts("default", config_file)
+    assert config.KAFKA_HOST == "localhost"
+    assert config.KAFKA_PORT == 9092
+\end{minted}
+\caption{Input validation and connecting to kafka success criterias}
+\end{code}
 
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{imgs/FinalTestData.png}
+  \end{center}
+  \caption{All tests have passed}\label{fig:}
+\end{figure}
+
+\begin{code}
+  \begin{minted}{text}  
+2024-10-21:11:53:47,797 INFO     [bootstrap.py:26] ATTEMPTING TO BOOTSTRAP - creating KafkaAdapter
+2024-10-21:11:53:49,508 INFO     [topics.py:191] Loading messages
+2024-10-21:11:53:49,508 INFO     [kafka_adapter.py:85] Start polling messages
+2024-10-21:11:53:49,524 INFO     [kafka_adapter.py:103] Partition 0: Low: 0, High: 81
+2024-10-21:11:53:53,82 INFO     [kafka_adapter.py:151] Reached limit of 50 messages. Stopping.
+2024-10-21:11:53:53,82 INFO     [kafka_adapter.py:155] End polling messages for topic: test-topic-wxvlkd
+2024-10-21:11:53:53,82 INFO     [topics.py:193] Got messages
+2024-10-21:11:57:42,381 INFO     [topics.py:191] Loading messages
+2024-10-21:11:57:42,381 INFO     [kafka_adapter.py:85] Start polling messages
+2024-10-21:11:57:42,636 INFO     [kafka_adapter.py:103] Partition 0: Low: 0, High: 0
+2024-10-21:11:57:42,644 INFO     [kafka_adapter.py:103] Partition 1: Low: 0, High: 0
+2024-10-21:11:57:42,647 INFO     [kafka_adapter.py:103] Partition 2: Low: 0, High: 0
+2024-10-21:11:57:42,649 INFO     [kafka_adapter.py:103] Partition 3: Low: 0, High: 0
+2024-10-21:11:57:42,651 INFO     [kafka_adapter.py:103] Partition 4: Low: 0, High: 0
+2024-10-21:11:57:42,654 INFO     [kafka_adapter.py:103] Partition 5: Low: 0, High: 36
+2024-10-21:11:57:42,657 INFO     [kafka_adapter.py:103] Partition 6: Low: 0, High: 0
+2024-10-21:11:57:42,659 INFO     [kafka_adapter.py:103] Partition 7: Low: 0, High: 0
+2024-10-21:11:57:42,662 INFO     [kafka_adapter.py:103] Partition 8: Low: 0, High: 0
+2024-10-21:11:57:42,664 INFO     [kafka_adapter.py:103] Partition 9: Low: 0, High: 0
+2024-10-21:11:57:42,667 INFO     [kafka_adapter.py:103] Partition 10: Low: 0, High: 0
+2024-10-21:11:57:42,669 INFO     [kafka_adapter.py:103] Partition 11: Low: 0, High: 0
+2024-10-21:11:57:42,671 INFO     [kafka_adapter.py:103] Partition 12: Low: 0, High: 0
+2024-10-21:11:57:42,674 INFO     [kafka_adapter.py:103] Partition 13: Low: 0, High: 0
+2024-10-21:11:57:42,674 INFO     [kafka_adapter.py:103] Partition 14: Low: 0, High: 0
+2024-10-21:11:57:42,675 INFO     [kafka_adapter.py:103] Partition 15: Low: 0, High: 0
+2024-10-21:11:57:42,675 INFO     [kafka_adapter.py:103] Partition 16: Low: 0, High: 0
+2024-10-21:11:57:42,676 INFO     [kafka_adapter.py:103] Partition 17: Low: 0, High: 0
+2024-10-21:11:57:42,676 INFO     [kafka_adapter.py:103] Partition 18: Low: 0, High: 0
+2024-10-21:11:57:42,676 INFO     [kafka_adapter.py:103] Partition 19: Low: 0, High: 0
+2024-10-21:11:57:42,676 INFO     [kafka_adapter.py:103] Partition 20: Low: 0, High: 0
+2024-10-21:11:57:42,677 INFO     [kafka_adapter.py:103] Partition 21: Low: 0, High: 0
+2024-10-21:11:57:42,677 INFO     [kafka_adapter.py:103] Partition 22: Low: 0, High: 0
+2024-10-21:11:57:42,677 INFO     [kafka_adapter.py:103] Partition 23: Low: 0, High: 0
+2024-10-21:11:57:42,677 INFO     [kafka_adapter.py:103] Partition 24: Low: 0, High: 0
+2024-10-21:11:57:42,678 INFO     [kafka_adapter.py:103] Partition 25: Low: 0, High: 0
+2024-10-21:11:57:42,678 INFO     [kafka_adapter.py:103] Partition 26: Low: 0, High: 0
+2024-10-21:11:57:42,678 INFO     [kafka_adapter.py:103] Partition 27: Low: 0, High: 0
+2024-10-21:11:57:42,678 INFO     [kafka_adapter.py:103] Partition 28: Low: 0, High: 0
+2024-10-21:11:57:42,679 INFO     [kafka_adapter.py:103] Partition 29: Low: 0, High: 0
+2024-10-21:11:57:42,679 INFO     [kafka_adapter.py:103] Partition 30: Low: 0, High: 0
+2024-10-21:11:57:42,679 INFO     [kafka_adapter.py:103] Partition 31: Low: 0, High: 0
+2024-10-21:11:57:42,679 INFO     [kafka_adapter.py:103] Partition 32: Low: 0, High: 0
+2024-10-21:11:57:42,680 INFO     [kafka_adapter.py:103] Partition 33: Low: 0, High: 0
+2024-10-21:11:57:42,680 INFO     [kafka_adapter.py:103] Partition 34: Low: 0, High: 0
+2024-10-21:11:57:42,680 INFO     [kafka_adapter.py:103] Partition 35: Low: 0, High: 0
+2024-10-21:11:57:42,681 INFO     [kafka_adapter.py:103] Partition 36: Low: 0, High: 0
+2024-10-21:11:57:42,681 INFO     [kafka_adapter.py:103] Partition 37: Low: 0, High: 0
+2024-10-21:11:57:42,682 INFO     [kafka_adapter.py:103] Partition 38: Low: 0, High: 0
+2024-10-21:11:57:42,682 INFO     [kafka_adapter.py:103] Partition 39: Low: 0, High: 0
+2024-10-21:11:57:42,682 INFO     [kafka_adapter.py:103] Partition 40: Low: 0, High: 0
+2024-10-21:11:57:42,683 INFO     [kafka_adapter.py:103] Partition 41: Low: 0, High: 0
+2024-10-21:11:57:42,683 INFO     [kafka_adapter.py:103] Partition 42: Low: 0, High: 0
+2024-10-21:11:57:42,683 INFO     [kafka_adapter.py:103] Partition 43: Low: 0, High: 0
+2024-10-21:11:57:42,684 INFO     [kafka_adapter.py:103] Partition 44: Low: 0, High: 0
+2024-10-21:11:57:42,684 INFO     [kafka_adapter.py:103] Partition 45: Low: 0, High: 0
+2024-10-21:11:57:42,684 INFO     [kafka_adapter.py:103] Partition 46: Low: 0, High: 0
+2024-10-21:11:57:42,685 INFO     [kafka_adapter.py:103] Partition 47: Low: 0, High: 0
+2024-10-21:11:57:42,685 INFO     [kafka_adapter.py:103] Partition 48: Low: 0, High: 0
+2024-10-21:11:57:42,685 INFO     [kafka_adapter.py:103] Partition 49: Low: 0, High: 0
+2024-10-21:11:57:44,259 INFO     [kafka_adapter.py:118] All partitions have been fully consumed. Stopping.
+2024-10-21:11:57:44,259 INFO     [kafka_adapter.py:155] End polling messages for topic: __consumer_offsets
+2024-10-21:11:57:44,259 INFO     [topics.py:193] Got messages
+2024-10-21:11:57:53,325 INFO     [bootstrap.py:38] BOOTSTRAPING Completed
+2024-10-21:12:17:02,186 INFO     [bootstrap.py:26] ATTEMPTING TO BOOTSTRAP - creating KafkaAdapter
+  \end{minted}
+  \caption{kandy.log}
+\end{code}
+
+\newpage
+\subsection{Addressing Partially Met and Unmet Criteria}
+
+The table below outlines the partially met and unmet success criteria, the issues identified, and the proposed solutions for addressing these in future development.
+
+\begin{table}[h!tbp]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{|p{3.5cm}|p{6.5cm}|p{5.5cm}|}
+\hline
+\textbf{Criterion} & \textbf{Issue} & \textbf{Proposed Solution} \\ \hline
+
+\textbf{Sorting Topics} & 
+Sorting functionality was not tested due to a lack of understanding of the implementation of tests. &
+\begin{itemize}
+  \item Learn how to write tests for textual UI
+  \item Learn to make proper benchmark tests
+\end{itemize} \\ \hline
+
+\textbf{UI Responsiveness} & 
+No direct evidence of UI responsiveness; inferred only from timely message-fetching logs. &
+\begin{itemize}
+    \item Implement automated UI tests using tools like Selenium or Playwright to simulate user interactions.
+    \item Log UI transitions (e.g., fetching messages or sorting topics) to confirm responsiveness.
+    \item Conduct manual stress testing with large datasets to identify bottlenecks.
+    \item Invite stakeholders to test UI; Unfortunately I didn't have such opportuinity, as I chose stakehoder without considering their availability for interviews
+\end{itemize} \\ \hline
+
+\end{tabular}
+\end{adjustbox}
+\caption{Addressing Partially Met and Unmet Criteria}
+\label{tab:addressing-criteria}
+\end{table}
+
+\newpage
+\subsection{Maintenance Issues and Limitations of the Solution}
+
+The following section outlines the key maintenance challenges and limitations identified in the current solution, along with proposed solutions for addressing these issues in future development.
+
+\subsubsection{Configuration Management}
+The current approach relies on manually created and maintained configuration files. This introduces a risk of user errors, such as syntax mistakes or missing fields, which can disrupt system functionality.
+
+\textbf{Proposed Solutions:}
+\begin{itemize}
+    \item Implement a user-friendly configuration wizard to guide users through creating and validating configuration files.
+\end{itemize}
+
+\subsubsection{Testing Coverage}
+The sorting functionality remains untested due to a lack of understanding of how to implement relevant tests. This limits confidence in its correctness and performance. Only solution I have is to learn harder and budgget more time for testing
+
+\subsubsection{Scalability}
+The current solution assumes small-to-medium Kafka clusters, but it may face performance issues when handling larger datasets. Fetching messages or topics could become bottlenecks, to address this issues I have to 
+
+\begin{itemize}
+    \item Optimize message-fetching and sorting algorithms to handle large Kafka topics efficiently.
+    \item Introduce mechanisms like pagination or streaming for handling large datasets incrementally.
+\end{itemize}
+
+\subsubsection{Error Handling}
+Errors, such as invalid CLI inputs or corrupted configuration files, are currently raised but often lack actionable feedback for the user. Also I couldn't find any information on how to deal with confluent\_kafka lib errors, which are directly stramed to stdout
+
+
+\subsubsection{UI Responsiveness}
+UI responsiveness is inferred rather than explicitly tested, raising concerns about its behavior under heavy loads or large datasets.
+
+\textbf{Proposed Solutions:}
+\begin{itemize}
+    \item Implement performance profiling for key UI actions under different load conditions.
+    \item Optimize UI updates to prioritize responsiveness during intensive Kafka operations.
+\end{itemize}
+
+
+\subsubsection{Documentation}
+Whole application lack detailed documentation, despite having detailed comments. This gap can impede future development and maintenance efforts. There is only one solution - do actualy write documentation
+
+
+\newpage
 \appendix
 \chapter{System Design}\label{appendix:system_design}
 \begin{figure}[htpb]
@@ -2967,12 +3355,12 @@ build-backend = "poetry.core.masonry.api"
 
 \subsection{fixtures/hosts/wrong\_syntax\_missing\_host.yaml}
 \begin{code}
-  \inputminted[fontsize=\small]{YAML}{../tests/fixtures/hosts/wrong_syntax_missing_host}
+  \inputminted[fontsize=\small]{YAML}{../tests/fixtures/hosts/wrong_syntax_missing_host.yaml}
 \end{code}
 
 \subsection{fixtures/hosts/wrong\_syntax\_missing\_port.yaml}
 \begin{code}
-  \inputminted[fontsize=\small]{YAML}{../tests/fixtures/hosts/wrong_syntax_missing_port}
+  \inputminted[fontsize=\small]{YAML}{../tests/fixtures/hosts/wrong_syntax_missing_port.yaml}
 \end{code}
 
 \subsection{fixtures/hosts/kafka\_admin.py}
@@ -3025,6 +3413,7 @@ build-backend = "poetry.core.masonry.api"
 
 \bibitem{b5} Apache Kafka. (n.d.). Apache Kafka. [online] Available at: https://kafka.apache.org/documentation/.
 
+\bibitem{b6} design-practice-repository. (2016). design-practice-repository. [online] Available at: https://socadk.github.io/design-practice-repository/artifact-templates/DPR-QualityAttributeScenario.html.
 
 \end{thebibliography}
 

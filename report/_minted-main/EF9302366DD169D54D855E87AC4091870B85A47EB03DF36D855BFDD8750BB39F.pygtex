@@ -1,0 +1,22 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{confluent\PYGZus{}kafka.admin} \PYG{k+kn}{import} \PYG{n}{AdminClient}
+\PYG{k+kn}{import} \PYG{n+nn}{pytest}
+
+
+\PYG{k}{class} \PYG{n+nc}{Server}\PYG{p}{:}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{host}\PYG{p}{,} \PYG{n}{port}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{HOST} \PYG{o}{=} \PYG{n}{host}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{PORT} \PYG{o}{=} \PYG{n}{port}
+
+
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{k}{def} \PYG{n+nf}{server}\PYG{p}{():}
+    \PYG{k}{return} \PYG{n}{Server}\PYG{p}{(}\PYG{n}{host}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}localhost\PYGZdq{}}\PYG{p}{,} \PYG{n}{port}\PYG{o}{=}\PYG{l+m+mi}{29092}\PYG{p}{)}
+
+
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{k}{def} \PYG{n+nf}{kafka\PYGZus{}admin\PYGZus{}client}\PYG{p}{(}\PYG{n}{server}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Fixture to provide a Kafka Admin client for the duration of the test module.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{client} \PYG{o}{=} \PYG{n}{AdminClient}\PYG{p}{(\PYGZob{}}\PYG{l+s+s2}{\PYGZdq{}bootstrap.servers\PYGZdq{}}\PYG{p}{:} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{server}\PYG{o}{.}\PYG{n}{HOST}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{:}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{server}\PYG{o}{.}\PYG{n}{PORT}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{\PYGZcb{})}
+    \PYG{k}{yield} \PYG{n}{client}
+\end{Verbatim}

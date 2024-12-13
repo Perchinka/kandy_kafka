@@ -1,0 +1,308 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{\PYGZus{}\PYGZus{}future\PYGZus{}\PYGZus{}} \PYG{k+kn}{import} \PYG{n}{annotations}
+
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.domain.models} \PYG{k+kn}{import} \PYG{n}{KafkaMessage}\PYG{p}{,} \PYG{n}{Topic}
+\PYG{k+kn}{import} \PYG{n+nn}{logging}
+
+\PYG{k+kn}{from} \PYG{n+nn}{typing} \PYG{k+kn}{import} \PYG{n}{TYPE\PYGZus{}CHECKING}\PYG{p}{,} \PYG{n}{Tuple}\PYG{p}{,} \PYG{n}{List}
+
+\PYG{k}{if} \PYG{n}{TYPE\PYGZus{}CHECKING}\PYG{p}{:}
+    \PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.bootstrap} \PYG{k+kn}{import} \PYG{n}{Bootstraped}
+
+\PYG{k+kn}{from} \PYG{n+nn}{textual} \PYG{k+kn}{import} \PYG{n}{on}\PYG{p}{,} \PYG{n}{work}
+\PYG{k+kn}{from} \PYG{n+nn}{textual.containers} \PYG{k+kn}{import} \PYG{n}{Horizontal}\PYG{p}{,} \PYG{n}{Vertical}\PYG{p}{,} \PYG{n}{Container}
+\PYG{k+kn}{from} \PYG{n+nn}{textual.app} \PYG{k+kn}{import} \PYG{n}{ComposeResult}
+\PYG{k+kn}{from} \PYG{n+nn}{textual.widgets} \PYG{k+kn}{import} \PYG{p}{(}
+    \PYG{n}{Label}\PYG{p}{,}
+    \PYG{n}{ListItem}\PYG{p}{,}
+    \PYG{n}{ListView}\PYG{p}{,}
+    \PYG{n}{Input}\PYG{p}{,}
+    \PYG{n}{DataTable}\PYG{p}{,}
+\PYG{p}{)}
+
+\PYG{k+kn}{import} \PYG{n+nn}{re}
+
+
+\PYG{k}{class} \PYG{n+nc}{BaseTable}\PYG{p}{(}\PYG{n}{DataTable}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Base class for creating custom datatables in the Textual UI with Vim keybindings support}
+\PYG{l+s+sd}{    and sorting functionality}
+
+\PYG{l+s+sd}{    Attributes:}
+\PYG{l+s+sd}{        sort\PYGZus{}directions (dict): A dictionary to store the sorting direction of each column}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n}{BINDINGS} \PYG{o}{=} \PYG{p}{[}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}j\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}cursor\PYGZus{}down\PYGZdq{}}\PYG{p}{),}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}k\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}cursor\PYGZus{}up\PYGZdq{}}\PYG{p}{),}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}G\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}scroll\PYGZus{}bottom\PYGZdq{}}\PYG{p}{),}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}g\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}scroll\PYGZus{}top\PYGZdq{}}\PYG{p}{),}
+    \PYG{p}{]}  \PYG{c+c1}{\PYGZsh{} Vim bindings}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{css\PYGZus{}id}\PYG{p}{:} \PYG{n+nb}{str}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb}{id}\PYG{o}{=}\PYG{n}{css\PYGZus{}id}\PYG{p}{)}
+        \PYG{c+c1}{\PYGZsh{} Dictionary to store sorting directions for each column}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{sort\PYGZus{}directions} \PYG{o}{=} \PYG{p}{\PYGZob{}\PYGZcb{}}
+
+    \PYG{k}{def} \PYG{n+nf}{build\PYGZus{}table}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{columns}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n}{Tuple}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{,} \PYG{n+nb}{str}\PYG{p}{]]):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Build the table (set necessary columns)}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            columns (List[Tuple[str, str]]): A list of tuples containing column names and keys}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{cursor\PYGZus{}type} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}row\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{zebra\PYGZus{}stripes} \PYG{o}{=} \PYG{k+kc}{True}
+
+        \PYG{k}{for} \PYG{n}{column\PYGZus{}name}\PYG{p}{,} \PYG{n}{key} \PYG{o+ow}{in} \PYG{n}{columns}\PYG{p}{:}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{add\PYGZus{}column}\PYG{p}{(}\PYG{n}{column\PYGZus{}name}\PYG{p}{,} \PYG{n}{key}\PYG{o}{=}\PYG{n}{key}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{update\PYGZus{}rows}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{rows}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n}{List}\PYG{p}{]):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Update the table}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            rows (List[List]): List of rows to add to the table}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{clear}\PYG{p}{()}  \PYG{c+c1}{\PYGZsh{} Clear existing rows}
+
+        \PYG{k}{for} \PYG{n}{row} \PYG{o+ow}{in} \PYG{n}{rows}\PYG{p}{:}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{add\PYGZus{}row}\PYG{p}{(}\PYG{o}{*}\PYG{n}{row}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} def toggle\PYGZus{}sort\PYGZus{}direction(self, column: str) \PYGZhy{}\PYGZgt{} bool:}
+    \PYG{c+c1}{\PYGZsh{}     \PYGZdq{}\PYGZdq{}\PYGZdq{}Toggle the sort direction for the given column.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{c+c1}{\PYGZsh{}     \PYGZsh{} Flip the sort direction and store it}
+    \PYG{c+c1}{\PYGZsh{}     self.sort\PYGZus{}directions[column] = not self.sort\PYGZus{}directions[column]}
+    \PYG{c+c1}{\PYGZsh{}     return self.sort\PYGZus{}directions[column]}
+    \PYG{c+c1}{\PYGZsh{}}
+    \PYG{c+c1}{\PYGZsh{} def get\PYGZus{}sort\PYGZus{}key(self, column: str):}
+    \PYG{c+c1}{\PYGZsh{}     \PYGZdq{}\PYGZdq{}\PYGZdq{}Return the appropriate key function for sorting based on the column.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{c+c1}{\PYGZsh{}     return lambda topic: topic.name  \PYGZsh{} Default to sorting by topic name}
+    \PYG{c+c1}{\PYGZsh{}}
+    \PYG{c+c1}{\PYGZsh{} def sort\PYGZus{}table(self, topics: list[Topic], column: str) \PYGZhy{}\PYGZgt{} list[Topic]:}
+    \PYG{c+c1}{\PYGZsh{}     \PYGZdq{}\PYGZdq{}\PYGZdq{}Sort the topics list by the specified column.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{c+c1}{\PYGZsh{}     reverse = self.toggle\PYGZus{}sort\PYGZus{}direction(column)}
+    \PYG{c+c1}{\PYGZsh{}     key\PYGZus{}func = self.get\PYGZus{}sort\PYGZus{}key(column)}
+    \PYG{c+c1}{\PYGZsh{}     return sorted(topics, key=key\PYGZus{}func, reverse=reverse)}
+
+
+\PYG{k}{class} \PYG{n+nc}{MessagesTable}\PYG{p}{(}\PYG{n}{BaseTable}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Table for displaying Kafka messages}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{k+kc}{None}\PYG{p}{:}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}messages\PYGZhy{}table\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{on\PYGZus{}mount}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Build the table and set its border title on table creation}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{build\PYGZus{}table}\PYG{p}{(}
+            \PYG{p}{[}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Offset\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}offset\PYGZdq{}}\PYG{p}{),}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Partition\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}partition\PYGZdq{}}\PYG{p}{),}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Timestamp\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}timestamp\PYGZdq{}}\PYG{p}{),}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Key\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}key\PYGZdq{}}\PYG{p}{),}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Value\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}Value\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{]}
+        \PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{border\PYGZus{}title} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Messages\PYGZdq{}}
+
+    \PYG{k}{def} \PYG{n+nf}{update\PYGZus{}messages}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{messages}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n}{KafkaMessage}\PYG{p}{]):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Update the table with a list of Kafka messages}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            messages (List[KafkaMessage]): List of messages to display}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n}{rows} \PYG{o}{=} \PYG{p}{[]}
+        \PYG{k}{for} \PYG{n}{message} \PYG{o+ow}{in} \PYG{n}{messages}\PYG{p}{:}
+            \PYG{n}{rows}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}
+                \PYG{p}{[}
+                    \PYG{n}{message}\PYG{o}{.}\PYG{n}{offset}\PYG{p}{,}
+                    \PYG{n}{message}\PYG{o}{.}\PYG{n}{partition\PYGZus{}id}\PYG{p}{,}
+                    \PYG{k+kc}{None}\PYG{p}{,}  \PYG{c+c1}{\PYGZsh{} Placeholder for timestamp}
+                    \PYG{n}{message}\PYG{o}{.}\PYG{n}{key}\PYG{p}{,}
+                    \PYG{n}{message}\PYG{o}{.}\PYG{n}{value}\PYG{p}{,}
+                \PYG{p}{]}
+            \PYG{p}{)}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{update\PYGZus{}rows}\PYG{p}{(}\PYG{n}{rows}\PYG{p}{)}
+
+
+\PYG{k}{class} \PYG{n+nc}{TopicsTable}\PYG{p}{(}\PYG{n}{BaseTable}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Table for displaying Kafka topics in the Textual UI}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{k+kc}{None}\PYG{p}{:}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}topics\PYGZhy{}table\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{on\PYGZus{}mount}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Build the table and set its border title on table creation}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{build\PYGZus{}table}\PYG{p}{(}
+            \PYG{p}{[}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Topic name\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}name\PYGZdq{}}\PYG{p}{),}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Partitions\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{} partitions\PYGZdq{}}\PYG{p}{),}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Replication factor\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}replication\PYGZdq{}}\PYG{p}{),}
+                \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Amount of Messages\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}messages\PYGZdq{}}\PYG{p}{),}
+            \PYG{p}{]}
+        \PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{border\PYGZus{}title} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Topics\PYGZdq{}}
+
+    \PYG{k}{def} \PYG{n+nf}{update\PYGZus{}topics}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{topics}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n}{Topic}\PYG{p}{]):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Update the table with a list of Kafka topics}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            topics (List[Topic]): List of topics to display}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n}{rows} \PYG{o}{=} \PYG{p}{[]}
+        \PYG{k}{for} \PYG{n}{topic} \PYG{o+ow}{in} \PYG{n}{topics}\PYG{p}{:}
+            \PYG{n}{rows}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}
+                \PYG{p}{[}\PYG{n}{topic}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{topic}\PYG{o}{.}\PYG{n}{partitions}\PYG{p}{),} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{topic}\PYG{o}{.}\PYG{n}{amount\PYGZus{}of\PYGZus{}messages}\PYG{p}{]}
+            \PYG{p}{)}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{update\PYGZus{}rows}\PYG{p}{(}\PYG{n}{rows}\PYG{p}{)}
+
+
+\PYG{k}{class} \PYG{n+nc}{SearchHandler}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Class responsible for handling topic filtering based on search queries}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n+nd}{@staticmethod}
+    \PYG{k}{def} \PYG{n+nf}{filter\PYGZus{}topics}\PYG{p}{(}\PYG{n}{topics}\PYG{p}{:} \PYG{n+nb}{list}\PYG{p}{[}\PYG{n}{Topic}\PYG{p}{],} \PYG{n}{query}\PYG{p}{:} \PYG{n+nb}{str}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n+nb}{list}\PYG{p}{[}\PYG{n}{Topic}\PYG{p}{]:}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Filter the list of topics based on a search query}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            topics (list[Topic]): List of topics to filter}
+\PYG{l+s+sd}{            query (str): Search query used for filtering topics}
+
+\PYG{l+s+sd}{        Returns:}
+\PYG{l+s+sd}{            list[Topic]: A filtered list of topics that match the search query}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{if} \PYG{o+ow}{not} \PYG{n}{query}\PYG{p}{:}
+            \PYG{k}{return} \PYG{n}{topics}
+        \PYG{n}{query} \PYG{o}{=} \PYG{n}{query}\PYG{o}{.}\PYG{n}{strip}\PYG{p}{()}
+        \PYG{k}{return} \PYG{p}{[}
+            \PYG{n}{topic} \PYG{k}{for} \PYG{n}{topic} \PYG{o+ow}{in} \PYG{n}{topics} \PYG{k}{if} \PYG{n}{re}\PYG{o}{.}\PYG{n}{search}\PYG{p}{(}\PYG{n}{query}\PYG{p}{,} \PYG{n}{topic}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{n}{re}\PYG{o}{.}\PYG{n}{IGNORECASE}\PYG{p}{)}
+        \PYG{p}{]}
+
+
+\PYG{k}{class} \PYG{n+nc}{TopicsView}\PYG{p}{(}\PYG{n}{Container}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Main view for displaying Kafka topics and messages in a two\PYGZhy{}pane layout}
+
+\PYG{l+s+sd}{    This view includes a sidebar, a search input field, and tables for topics and messages}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n}{BINDINGS} \PYG{o}{=} \PYG{p}{[}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}ctrl+r\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}reload\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}Reload topics\PYGZdq{}}\PYG{p}{),}
+    \PYG{p}{]}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{bootstraped}\PYG{p}{:} \PYG{n}{Bootstraped}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            bootstraped (Bootstraped): An instance of Bootstraped that contains the Kafka adapter}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter} \PYG{o}{=} \PYG{n}{bootstraped}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics\PYGZus{}table} \PYG{o}{=} \PYG{n}{TopicsTable}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{messages\PYGZus{}table} \PYG{o}{=} \PYG{n}{MessagesTable}\PYG{p}{()}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics} \PYG{o}{=} \PYG{p}{[]}
+
+    \PYG{k}{def} \PYG{n+nf}{compose}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{ComposeResult}\PYG{p}{:}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{l+s+sd}{        Returns:}
+\PYG{l+s+sd}{            ComposeResult: A generator that yields UI components for display}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{yield} \PYG{n}{Horizontal}\PYG{p}{(}
+            \PYG{n}{Vertical}\PYG{p}{(}
+                \PYG{n}{ListView}\PYG{p}{(}
+                    \PYG{n}{ListItem}\PYG{p}{(}\PYG{n}{Label}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Brokers\PYGZdq{}}\PYG{p}{)),}
+                    \PYG{n}{ListItem}\PYG{p}{(}\PYG{n}{Label}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Topics\PYGZdq{}}\PYG{p}{)),}
+                    \PYG{n}{ListItem}\PYG{p}{(}\PYG{n}{Label}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Consumers\PYGZdq{}}\PYG{p}{)),}
+                \PYG{p}{),}
+                \PYG{n+nb}{id}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}sidebar\PYGZdq{}}\PYG{p}{,}
+            \PYG{p}{),}
+            \PYG{n}{Vertical}\PYG{p}{(}
+                \PYG{n}{Input}\PYG{p}{(}
+                    \PYG{n}{placeholder}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Search Topics...\PYGZdq{}}\PYG{p}{,} \PYG{n+nb}{id}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}search\PYGZhy{}field\PYGZdq{}}
+                \PYG{p}{),}  \PYG{c+c1}{\PYGZsh{} Create class that will work with input}
+                \PYG{n}{Horizontal}\PYG{p}{(}
+                    \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics\PYGZus{}table}\PYG{p}{,}
+                    \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{messages\PYGZus{}table}\PYG{p}{,}
+                \PYG{p}{),}
+                \PYG{n+nb}{id}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}center\PYGZhy{}pane\PYGZdq{}}\PYG{p}{,}
+            \PYG{p}{),}
+        \PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{on\PYGZus{}mount}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        This method preloads the topics from the Kafka adapter on the first mount}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{load\PYGZus{}topics}\PYG{p}{()}
+
+    \PYG{k}{def} \PYG{n+nf}{load\PYGZus{}topics}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Load topics from the Kafka adapter and update the topics table}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n}{topics} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter}\PYG{o}{.}\PYG{n}{get\PYGZus{}topics}\PYG{p}{()}
+        \PYG{c+c1}{\PYGZsh{} TODO separate filtering logic}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics} \PYG{o}{=} \PYG{n}{topics}  \PYG{c+c1}{\PYGZsh{} Store the topics for later filtering}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics\PYGZus{}table}\PYG{o}{.}\PYG{n}{update\PYGZus{}topics}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics\PYGZus{}table}\PYG{o}{.}\PYG{n}{loading} \PYG{o}{=} \PYG{k+kc}{False}
+
+    \PYG{n+nd}{@work}\PYG{p}{(}\PYG{n}{thread}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+    \PYG{k}{async} \PYG{k}{def} \PYG{n+nf}{load\PYGZus{}messages}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{topic\PYGZus{}name}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Asynchronously load messages for the selected topic}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            topic\PYGZus{}name (str): The name of the topic to load messages from}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n}{logging}\PYG{o}{.}\PYG{n}{info}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Loading messages\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{messages} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter}\PYG{o}{.}\PYG{n}{get\PYGZus{}messages}\PYG{p}{(}\PYG{n}{topic\PYGZus{}name}\PYG{p}{)}
+        \PYG{n}{logging}\PYG{o}{.}\PYG{n}{info}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Got messages\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{messages\PYGZus{}table}\PYG{o}{.}\PYG{n}{update\PYGZus{}messages}\PYG{p}{(}\PYG{n}{messages}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{messages\PYGZus{}table}\PYG{o}{.}\PYG{n}{loading} \PYG{o}{=} \PYG{k+kc}{False}
+
+    \PYG{k}{async} \PYG{k}{def} \PYG{n+nf}{on\PYGZus{}input\PYGZus{}changed}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{event}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Handle changes to the search input field and filter topics accordingly}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            event: Event object containing information about the input change}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n}{search\PYGZus{}query} \PYG{o}{=} \PYG{n}{event}\PYG{o}{.}\PYG{n}{value}\PYG{o}{.}\PYG{n}{strip}\PYG{p}{()}
+        \PYG{n}{filtered\PYGZus{}topics} \PYG{o}{=} \PYG{n}{SearchHandler}\PYG{o}{.}\PYG{n}{filter\PYGZus{}topics}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics}\PYG{p}{,} \PYG{n}{search\PYGZus{}query}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{topics\PYGZus{}table}\PYG{o}{.}\PYG{n}{update\PYGZus{}topics}\PYG{p}{(}\PYG{n}{filtered\PYGZus{}topics}\PYG{p}{)}
+
+    \PYG{n+nd}{@on}\PYG{p}{(}\PYG{n}{DataTable}\PYG{o}{.}\PYG{n}{RowSelected}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}\PYGZsh{}topics\PYGZhy{}table\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{def} \PYG{n+nf}{handle\PYGZus{}row\PYGZus{}selected}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{message}\PYG{p}{:} \PYG{n}{DataTable}\PYG{o}{.}\PYG{n}{RowSelected}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Handle the event when a row in the topics table is selected (Enter was pressed)}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            message (DataTable.RowSelected): Event object containing information about the selected row}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{messages\PYGZus{}table}\PYG{o}{.}\PYG{n}{loading} \PYG{o}{=} \PYG{k+kc}{True}
+        \PYG{n}{topic\PYGZus{}name} \PYG{o}{=} \PYG{n}{message}\PYG{o}{.}\PYG{n}{data\PYGZus{}table}\PYG{o}{.}\PYG{n}{get\PYGZus{}cell}\PYG{p}{(}\PYG{n}{message}\PYG{o}{.}\PYG{n}{row\PYGZus{}key}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}name\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{load\PYGZus{}messages}\PYG{p}{(}\PYG{n}{topic\PYGZus{}name}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Actions \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def} \PYG{n+nf}{action\PYGZus{}reload}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Action to reload the topics list (ctrl\PYGZhy{}R)}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{load\PYGZus{}topics}\PYG{p}{()}
+\end{Verbatim}

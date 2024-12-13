@@ -1,0 +1,62 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.bootstrap} \PYG{k+kn}{import} \PYG{n}{Bootstrap}
+\PYG{k+kn}{import} \PYG{n+nn}{argparse}
+
+
+\PYG{k}{class} \PYG{n+nc}{ConditionalAction}\PYG{p}{(}\PYG{n}{argparse}\PYG{o}{.}\PYG{n}{Action}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Custom argparse action that raises an error if both `clustername` and `\PYGZhy{}\PYGZhy{}host/\PYGZhy{}\PYGZhy{}port` are used together}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}call\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{parser}\PYG{p}{,} \PYG{n}{namespace}\PYG{p}{,} \PYG{n}{values}\PYG{p}{,} \PYG{n}{option\PYGZus{}string}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Overrides the \PYGZus{}\PYGZus{}call\PYGZus{}\PYGZus{} method of argparse.Action to enforce mutual exclusivity}
+\PYG{l+s+sd}{        between the `clustername` argument and the `\PYGZhy{}\PYGZhy{}host`/`\PYGZhy{}\PYGZhy{}port` options}
+
+\PYG{l+s+sd}{        Args:}
+\PYG{l+s+sd}{            parser (ArgumentParser): The argument parser instance}
+\PYG{l+s+sd}{            namespace (Namespace): The namespace object where attributes are stored}
+\PYG{l+s+sd}{            values (Any): The value associated with the argument}
+\PYG{l+s+sd}{            option\PYGZus{}string (str, optional): The option string that was used}
+
+\PYG{l+s+sd}{        Raises:}
+\PYG{l+s+sd}{            ArgumentError: If both `clustername` and `\PYGZhy{}\PYGZhy{}host`/`\PYGZhy{}\PYGZhy{}port` are specified}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{if} \PYG{n}{namespace}\PYG{o}{.}\PYG{n}{clustername}\PYG{p}{:}
+            \PYG{n}{parser}\PYG{o}{.}\PYG{n}{error}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}clustername specified; \PYGZhy{}\PYGZhy{}host and \PYGZhy{}\PYGZhy{}port should not be used\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{setattr}\PYG{p}{(}\PYG{n}{namespace}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{dest}\PYG{p}{,} \PYG{n}{values}\PYG{p}{)}
+
+
+\PYG{k}{def} \PYG{n+nf}{main}\PYG{p}{():}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Main function}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n}{parser} \PYG{o}{=} \PYG{n}{argparse}\PYG{o}{.}\PYG{n}{ArgumentParser}\PYG{p}{(}\PYG{n}{description}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Kandy Kafka\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{parser}\PYG{o}{.}\PYG{n}{add\PYGZus{}argument}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}clustername\PYGZdq{}}\PYG{p}{,} \PYG{n}{nargs}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}?\PYGZdq{}}\PYG{p}{,} \PYG{n+nb}{type}\PYG{o}{=}\PYG{n+nb}{str}\PYG{p}{,} \PYG{n}{help}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Cluster Name\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{parser}\PYG{o}{.}\PYG{n}{add\PYGZus{}argument}\PYG{p}{(}
+        \PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZhy{}host\PYGZdq{}}\PYG{p}{,} \PYG{n+nb}{type}\PYG{o}{=}\PYG{n+nb}{str}\PYG{p}{,} \PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{help}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Host\PYGZdq{}}\PYG{p}{,} \PYG{n}{action}\PYG{o}{=}\PYG{n}{ConditionalAction}
+    \PYG{p}{)}
+    \PYG{n}{parser}\PYG{o}{.}\PYG{n}{add\PYGZus{}argument}\PYG{p}{(}
+        \PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZhy{}port\PYGZdq{}}\PYG{p}{,} \PYG{n+nb}{type}\PYG{o}{=}\PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{help}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Port\PYGZdq{}}\PYG{p}{,} \PYG{n}{action}\PYG{o}{=}\PYG{n}{ConditionalAction}
+    \PYG{p}{)}
+
+    \PYG{n}{args} \PYG{o}{=} \PYG{n}{parser}\PYG{o}{.}\PYG{n}{parse\PYGZus{}args}\PYG{p}{()}
+
+    \PYG{c+c1}{\PYGZsh{} Error if neither clustername nor both host and port are provided}
+    \PYG{k}{if} \PYG{o+ow}{not} \PYG{n}{args}\PYG{o}{.}\PYG{n}{clustername} \PYG{o+ow}{and} \PYG{p}{(}\PYG{o+ow}{not} \PYG{n}{args}\PYG{o}{.}\PYG{n}{host} \PYG{o+ow}{or} \PYG{o+ow}{not} \PYG{n}{args}\PYG{o}{.}\PYG{n}{port}\PYG{p}{):}
+        \PYG{n}{parser}\PYG{o}{.}\PYG{n}{error}\PYG{p}{(}
+            \PYG{l+s+s2}{\PYGZdq{}If clustername is not specified, both \PYGZhy{}\PYGZhy{}host and \PYGZhy{}\PYGZhy{}port must be provided\PYGZdq{}}
+        \PYG{p}{)}
+
+    \PYG{n}{bootstraped} \PYG{o}{=} \PYG{n}{Bootstrap}\PYG{p}{()(}
+        \PYG{n}{clustername}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{clustername}\PYG{p}{,} \PYG{n}{host}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{host}\PYG{p}{,} \PYG{n}{port}\PYG{o}{=}\PYG{n}{args}\PYG{o}{.}\PYG{n}{port}
+    \PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} Close the Kafka consumer with the application}
+    \PYG{n}{bootstraped}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter}\PYG{o}{.}\PYG{n}{consumer}\PYG{o}{.}\PYG{n}{close}\PYG{p}{()}
+
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZdq{}}\PYG{p}{:}
+    \PYG{n}{main}\PYG{p}{()}
+\end{Verbatim}

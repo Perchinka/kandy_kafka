@@ -1,0 +1,94 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{pytest}
+\PYG{k+kn}{from} \PYG{n+nn}{pytest\PYGZus{}bdd} \PYG{k+kn}{import} \PYG{n}{parsers}\PYG{p}{,} \PYG{n}{scenarios}\PYG{p}{,} \PYG{n}{given}\PYG{p}{,} \PYG{n}{when}\PYG{p}{,} \PYG{n}{then}
+\PYG{k+kn}{import} \PYG{n+nn}{yaml}
+
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.config} \PYG{k+kn}{import} \PYG{n}{Config}
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.exceptions} \PYG{k+kn}{import} \PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{,} \PYG{n}{HostsFileNotFound}
+\PYG{k+kn}{from} \PYG{n+nn}{pathlib} \PYG{k+kn}{import} \PYG{n}{Path}
+
+\PYG{n}{scenarios}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}../features/hosts.feature\PYGZdq{}}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} Non\PYGZhy{}existing configuration file scenario}
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{n+nd}{@given}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Configuration file is not present\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{non\PYGZus{}existing\PYGZus{}config\PYGZus{}file}\PYG{p}{(}\PYG{n}{tmp\PYGZus{}path}\PYG{p}{):}
+    \PYG{k}{return} \PYG{n}{tmp\PYGZus{}path} \PYG{o}{/} \PYG{l+s+s2}{\PYGZdq{}hosts.yaml\PYGZdq{}}
+
+
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{n+nd}{@when}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}system loads config\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{config}\PYG{p}{():}
+    \PYG{k}{return} \PYG{n}{Config}\PYG{p}{()}
+
+
+\PYG{n+nd}{@then}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}application should prompt user to create or specify a configuration file\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{check\PYGZus{}prompt\PYGZus{}to\PYGZus{}create\PYGZus{}config}\PYG{p}{(}\PYG{n}{config}\PYG{p}{,} \PYG{n}{non\PYGZus{}existing\PYGZus{}config\PYGZus{}file}\PYG{p}{):}
+    \PYG{k}{with} \PYG{n}{pytest}\PYG{o}{.}\PYG{n}{raises}\PYG{p}{(}\PYG{n}{HostsFileNotFound}\PYG{p}{):}
+        \PYG{n}{config}\PYG{o}{.}\PYG{n}{hosts\PYGZus{}file} \PYG{o}{=} \PYG{n}{non\PYGZus{}existing\PYGZus{}config\PYGZus{}file}
+        \PYG{n}{config}\PYG{o}{.}\PYG{n}{load\PYGZus{}hosts}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}default\PYGZdq{}}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} Wrong syntax scenario}
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{n+nd}{@given}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Configuration file is present\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{config\PYGZus{}file}\PYG{p}{(}\PYG{n}{tmp\PYGZus{}path}\PYG{p}{):}
+    \PYG{n}{file} \PYG{o}{=} \PYG{n}{tmp\PYGZus{}path} \PYG{o}{/} \PYG{l+s+s2}{\PYGZdq{}hosts.yaml\PYGZdq{}}
+    \PYG{n}{file}\PYG{o}{.}\PYG{n}{touch}\PYG{p}{()}
+    \PYG{k}{return} \PYG{n}{file}
+
+
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{n+nd}{@given}\PYG{p}{(}
+    \PYG{n}{parsers}\PYG{o}{.}\PYG{n}{parse}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Configuration file has }\PYG{l+s+si}{\PYGZob{}error\PYGZus{}type\PYGZcb{}}\PYG{l+s+s2}{ syntax error\PYGZdq{}}\PYG{p}{),}
+    \PYG{n}{target\PYGZus{}fixture}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}config\PYGZus{}file\PYGZus{}with\PYGZus{}wrong\PYGZus{}syntax\PYGZdq{}}\PYG{p}{,}
+\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{config\PYGZus{}file\PYGZus{}with\PYGZus{}wrong\PYGZus{}syntax}\PYG{p}{(}\PYG{n}{config\PYGZus{}file}\PYG{p}{,} \PYG{n}{error\PYGZus{}type}\PYG{p}{):}
+    \PYG{k}{assert} \PYG{n}{config\PYGZus{}file}\PYG{o}{.}\PYG{n}{exists}\PYG{p}{()}
+    \PYG{n}{config\PYGZus{}fixture} \PYG{o}{=} \PYG{p}{(}
+        \PYG{n}{Path}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}tests\PYGZdq{}}\PYG{p}{)} \PYG{o}{/} \PYG{l+s+s2}{\PYGZdq{}fixtures\PYGZdq{}} \PYG{o}{/} \PYG{l+s+s2}{\PYGZdq{}hosts\PYGZdq{}} \PYG{o}{/} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}wrong\PYGZus{}syntax\PYGZus{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{error\PYGZus{}type}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{.yaml\PYGZdq{}}
+    \PYG{p}{)}
+    \PYG{n}{config\PYGZus{}file}\PYG{o}{.}\PYG{n}{write\PYGZus{}text}\PYG{p}{(}\PYG{n}{config\PYGZus{}fixture}\PYG{o}{.}\PYG{n}{read\PYGZus{}text}\PYG{p}{())}
+
+
+\PYG{n+nd}{@then}\PYG{p}{(}\PYG{n}{parsers}\PYG{o}{.}\PYG{n}{parse}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}application should show }\PYG{l+s+si}{\PYGZob{}error\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{))}
+\PYG{k}{def} \PYG{n+nf}{check\PYGZus{}promt\PYGZus{}to\PYGZus{}fix\PYGZus{}syntax}\PYG{p}{(}\PYG{n}{config}\PYG{p}{,} \PYG{n}{error}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{p}{):}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{error}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} TODO check that actual error message is in the stderr (Or stdout)}
+    \PYG{k}{with} \PYG{n}{pytest}\PYG{o}{.}\PYG{n}{raises}\PYG{p}{(}\PYG{n}{HostsFileHasWrongSyntax}\PYG{p}{):}
+        \PYG{n}{config}\PYG{o}{.}\PYG{n}{load\PYGZus{}hosts}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}default\PYGZdq{}}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} Correct syntax scenario}
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{n+nd}{@given}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Configuration file has valid syntax\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{config\PYGZus{}file\PYGZus{}with\PYGZus{}correct\PYGZus{}syntax}\PYG{p}{(}\PYG{n}{config\PYGZus{}file}\PYG{p}{):}
+    \PYG{n}{config\PYGZus{}file}\PYG{o}{.}\PYG{n}{write\PYGZus{}text}\PYG{p}{(}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        default:}
+\PYG{l+s+sd}{            host: localhost}
+\PYG{l+s+sd}{            port: 9092}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{p}{)}
+
+
+\PYG{n+nd}{@then}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}config should have valid connection details\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{check\PYGZus{}config\PYGZus{}details}\PYG{p}{(}\PYG{n}{config}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{p}{):}
+    \PYG{n}{config}\PYG{o}{.}\PYG{n}{load\PYGZus{}hosts}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}default\PYGZdq{}}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{p}{)}
+    \PYG{k}{assert} \PYG{n}{config}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}HOST} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}localhost\PYGZdq{}}
+    \PYG{k}{assert} \PYG{n}{config}\PYG{o}{.}\PYG{n}{KAFKA\PYGZus{}PORT} \PYG{o}{==} \PYG{l+m+mi}{9092}
+
+
+\PYG{c+c1}{\PYGZsh{} Invalid yaml syntax scenario}
+\PYG{n+nd}{@pytest}\PYG{o}{.}\PYG{n}{fixture}
+\PYG{n+nd}{@given}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Configuration file has invalid yaml syntax\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{config\PYGZus{}file\PYGZus{}with\PYGZus{}invalid\PYGZus{}yaml\PYGZus{}syntax}\PYG{p}{(}\PYG{n}{config\PYGZus{}file}\PYG{p}{):}
+    \PYG{n}{config\PYGZus{}file}\PYG{o}{.}\PYG{n}{write\PYGZus{}text}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}][\PYGZdq{}}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Well, I could write some invalid yaml fixtures, but naaaah :D}
+
+
+\PYG{n+nd}{@then}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}application should raise yaml error\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{check\PYGZus{}yaml\PYGZus{}error}\PYG{p}{(}\PYG{n}{config}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{p}{):}
+    \PYG{k}{with} \PYG{n}{pytest}\PYG{o}{.}\PYG{n}{raises}\PYG{p}{(}\PYG{n}{yaml}\PYG{o}{.}\PYG{n}{YAMLError}\PYG{p}{):}
+        \PYG{n}{config}\PYG{o}{.}\PYG{n}{load\PYGZus{}hosts}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}default\PYGZdq{}}\PYG{p}{,} \PYG{n}{config\PYGZus{}file}\PYG{p}{)}
+\end{Verbatim}

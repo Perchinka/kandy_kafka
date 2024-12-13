@@ -1,0 +1,46 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} kandy\PYGZus{}kafka/gui/controller.py}
+
+\PYG{c+c1}{\PYGZsh{} The code block below is needed to avoid a cyclic import error, while using Bootstrap class for type\PYGZhy{}hinting}
+\PYG{k+kn}{from} \PYG{n+nn}{\PYGZus{}\PYGZus{}future\PYGZus{}\PYGZus{}} \PYG{k+kn}{import} \PYG{n}{annotations}
+\PYG{k+kn}{from} \PYG{n+nn}{typing} \PYG{k+kn}{import} \PYG{n}{TYPE\PYGZus{}CHECKING}
+
+\PYG{k}{if} \PYG{n}{TYPE\PYGZus{}CHECKING}\PYG{p}{:}
+    \PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.bootstrap} \PYG{k+kn}{import} \PYG{n}{Bootstraped}
+
+\PYG{k+kn}{from} \PYG{n+nn}{textual.app} \PYG{k+kn}{import} \PYG{n}{App}\PYG{p}{,} \PYG{n}{ComposeResult}
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.gui.views} \PYG{k+kn}{import} \PYG{n}{TopicsView}
+\PYG{k+kn}{from} \PYG{n+nn}{typing} \PYG{k+kn}{import} \PYG{n}{TYPE\PYGZus{}CHECKING}
+
+\PYG{k}{if} \PYG{n}{TYPE\PYGZus{}CHECKING}\PYG{p}{:}
+    \PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.bootstrap} \PYG{k+kn}{import} \PYG{n}{Bootstraped}
+
+
+\PYG{k}{class} \PYG{n+nc}{Controller}\PYG{p}{(}\PYG{n}{App}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Main application controller\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n}{BINDINGS} \PYG{o}{=} \PYG{p}{[(}\PYG{l+s+s2}{\PYGZdq{}f\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}fetch\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}fetch\PYGZdq{}}\PYG{p}{)]}
+    \PYG{n}{CSS\PYGZus{}PATH} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}app.tcss\PYGZdq{}}  \PYG{c+c1}{\PYGZsh{} Textual CSS file for styling}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{bootstraped}\PYG{p}{:} \PYG{n}{Bootstraped}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{bootstrapped} \PYG{o}{=} \PYG{n}{bootstraped}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{bootstrapped}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{view} \PYG{o}{=} \PYG{n}{TopicsView}\PYG{p}{()}  \PYG{c+c1}{\PYGZsh{} Instantiate the TopicsView from views.py}
+
+    \PYG{k}{async} \PYG{k}{def} \PYG{n+nf}{reload\PYGZus{}topics}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{        Reload the topics by pulling them from the KafkaModel and updating the TopicsView.}
+\PYG{l+s+sd}{        \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n}{topics} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{kafka\PYGZus{}adapter}\PYG{o}{.}\PYG{n}{get\PYGZus{}topics}\PYG{p}{()}  \PYG{c+c1}{\PYGZsh{} Fetch topics from Kafka}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{view}\PYG{o}{.}\PYG{n}{build\PYGZus{}table}\PYG{p}{(}\PYG{n}{topics}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Update the table in the view}
+
+    \PYG{k}{async} \PYG{k}{def} \PYG{n+nf}{action\PYGZus{}fetch}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{k+kc}{None}\PYG{p}{:}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Handle the message to reload topics.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{await} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{reload\PYGZus{}topics}\PYG{p}{()}
+
+    \PYG{k}{def} \PYG{n+nf}{compose}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{ComposeResult}\PYG{p}{:}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Compose the app layout.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{yield} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{view}  \PYG{c+c1}{\PYGZsh{} Adds the TopicsView (table)}
+
+\end{Verbatim}

@@ -1,0 +1,42 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} The code block below is needed to avoid a cyclic import error, while using Bootstrap class for type\PYGZhy{}hinting}
+\PYG{k+kn}{from} \PYG{n+nn}{\PYGZus{}\PYGZus{}future\PYGZus{}\PYGZus{}} \PYG{k+kn}{import} \PYG{n}{annotations}
+\PYG{k+kn}{from} \PYG{n+nn}{typing} \PYG{k+kn}{import} \PYG{n}{TYPE\PYGZus{}CHECKING}
+
+\PYG{k}{if} \PYG{n}{TYPE\PYGZus{}CHECKING}\PYG{p}{:}
+    \PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.bootstrap} \PYG{k+kn}{import} \PYG{n}{Bootstraped}
+
+\PYG{k+kn}{from} \PYG{n+nn}{textual.widgets} \PYG{k+kn}{import} \PYG{n}{Footer}
+\PYG{k+kn}{from} \PYG{n+nn}{textual.app} \PYG{k+kn}{import} \PYG{n}{App}\PYG{p}{,} \PYG{n}{ComposeResult}
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.gui.views} \PYG{k+kn}{import} \PYG{n}{TopicsView}
+
+
+\PYG{k}{class} \PYG{n+nc}{Controller}\PYG{p}{(}\PYG{n}{App}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Main application controller (GUI)}
+
+\PYG{l+s+sd}{    This class controls the overall flow of the Textual\PYGZhy{}based application, managing}
+\PYG{l+s+sd}{    views and keybindings for user interaction.}
+
+\PYG{l+s+sd}{    Attributes:}
+\PYG{l+s+sd}{        view (TopicsView): The main view displaying Kafka topics.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{c+c1}{\PYGZsh{} Key bindings for navigation and control within the application}
+    \PYG{n}{BINDINGS} \PYG{o}{=} \PYG{p}{[}
+        \PYG{p}{(}
+            \PYG{l+s+s2}{\PYGZdq{}h\PYGZdq{}}\PYG{p}{,}
+            \PYG{l+s+s2}{\PYGZdq{}focus\PYGZus{}previous\PYGZdq{}}\PYG{p}{,}
+        \PYG{p}{),}  \PYG{c+c1}{\PYGZsh{} TODO solve problem with search field. Probably instead of fixed search field it\PYGZsq{}s better to use ctrl\PYGZhy{}F pop\PYGZhy{}up}
+        \PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}l\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}focus\PYGZus{}next\PYGZdq{}}\PYG{p}{),}
+    \PYG{p}{]}
+    \PYG{n}{CSS\PYGZus{}PATH} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}app.css\PYGZdq{}}  \PYG{c+c1}{\PYGZsh{} Textual CSS file for styling}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{bootstraped}\PYG{p}{:} \PYG{n}{Bootstraped}\PYG{p}{):}
+        \PYG{n+nb}{super}\PYG{p}{()}\PYG{o}{.}\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{()}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{view} \PYG{o}{=} \PYG{n}{TopicsView}\PYG{p}{(}\PYG{n}{bootstraped}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Instantiate the TopicsView from views.py}
+
+    \PYG{k}{def} \PYG{n+nf}{compose}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{ComposeResult}\PYG{p}{:}
+        \PYG{k}{yield} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{view}
+        \PYG{k}{yield} \PYG{n}{Footer}\PYG{p}{()}
+\end{Verbatim}

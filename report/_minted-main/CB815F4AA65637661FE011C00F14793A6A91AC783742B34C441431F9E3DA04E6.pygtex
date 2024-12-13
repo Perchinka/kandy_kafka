@@ -1,0 +1,4 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nt}{default}\PYG{p}{:}
+\PYG{+w}{  }\PYG{n+nt}{host}\PYG{p}{:}\PYG{+w}{ }\PYG{l+lScalar+lScalarPlain}{localhost}
+\end{Verbatim}

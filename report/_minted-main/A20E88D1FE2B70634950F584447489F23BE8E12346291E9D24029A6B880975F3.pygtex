@@ -1,0 +1,5 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{kandy\PYGZus{}kafka.bootstrap} \PYG{k+kn}{import} \PYG{n}{Bootstrap}
+
+\PYG{n}{module} \PYG{o}{=} \PYG{n}{Bootstrap}\PYG{o}{.}\PYG{n}{bootstraped}\PYG{o}{.}\PYG{n}{module\PYGZus{}name}
+\end{Verbatim}

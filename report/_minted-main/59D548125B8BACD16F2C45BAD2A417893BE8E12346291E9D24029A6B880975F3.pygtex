@@ -1,0 +1,29 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from} \PYG{n+nn}{abc} \PYG{k+kn}{import} \PYG{n}{ABC}\PYG{p}{,} \PYG{n}{abstractmethod}
+\PYG{k+kn}{from} \PYG{n+nn}{confluent\PYGZus{}kafka.admin} \PYG{k+kn}{import} \PYG{n}{AdminClient}
+\PYG{k+kn}{from} \PYG{n+nn}{confluent\PYGZus{}kafka} \PYG{k+kn}{import} \PYG{n}{Consumer}\PYG{p}{,} \PYG{n}{KafkaException}\PYG{p}{,} \PYG{n}{TopicPartition}
+\PYG{k+kn}{from} \PYG{n+nn}{datetime} \PYG{k+kn}{import} \PYG{n}{datetime}\PYG{p}{,} \PYG{n}{timedelta}
+
+\PYG{k+kn}{from} \PYG{n+nn}{typing} \PYG{k+kn}{import} \PYG{n}{List}
+
+\PYG{k+kn}{import} \PYG{n+nn}{logging}
+
+\PYG{k}{class} \PYG{n+nc}{AbstractKafkaClusterAdapter}\PYG{p}{(}\PYG{n}{ABC}\PYG{p}{):}
+    \PYG{n+nd}{@abstractmethod}
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}topics}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{List}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{]:}
+        \PYG{k}{raise} \PYG{n+ne}{NotImplementedError}
+
+    \PYG{n+nd}{@abstractmethod}
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}messages}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{topic}\PYG{p}{:} \PYG{n+nb}{str}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{List}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{]:}
+        \PYG{k}{raise} \PYG{n+ne}{NotImplementedError}
+
+\PYG{k}{class} \PYG{n+nc}{KafkaAdapter}\PYG{p}{(}\PYG{n}{AbstractKafkaClusterAdapter}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{host}\PYG{p}{:} \PYG{n+nb}{str}\PYG{p}{,} \PYG{n}{port}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{admin\PYGZus{}client} \PYG{o}{=} \PYG{n}{AdminClient}\PYG{p}{(\PYGZob{}}
+            \PYG{l+s+s2}{\PYGZdq{}bootstrap.servers\PYGZdq{}}\PYG{p}{:} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{host}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{:}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{port}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}
+        \PYG{p}{\PYGZcb{})}
+
+    \PYG{k}{def} \PYG{n+nf}{get\PYGZus{}topics}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{List}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{]:}
+        \PYG{n}{topics} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{admin\PYGZus{}client}\PYG{o}{.}\PYG{n}{list\PYGZus{}topics}\PYG{p}{(}\PYG{n}{timeout}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{)}\PYG{o}{.}\PYG{n}{topics}
+        \PYG{k}{return} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{topics}\PYG{p}{)}
+\end{Verbatim}
